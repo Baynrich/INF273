@@ -22,7 +22,7 @@ init_sol = [0, 0, 0, 7, 7, 3, 3, 1, 5, 5, 1, 6, 6, 4, 4, 2, 2]
 init_cost = cost_function(init_sol, problem)
 sols_iter = []
 costs_iter = []
-for i in range(1):
+for i in range(10):
     sols, costs = run_problem(problem, init_sol)
     sols_iter.append(sols)
     costs_iter.append(costs)

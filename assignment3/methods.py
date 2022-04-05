@@ -1,9 +1,9 @@
-from pdp_utils import *
+from utils import *
 from tqdm import tqdm
 import random
 import numpy as np
 
-n = 5000
+n = 10000
 
 def localsearch(init_sol, operator, prob):
     best_sol = init_sol

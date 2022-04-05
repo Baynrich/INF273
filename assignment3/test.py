@@ -2,40 +2,69 @@ from utils import *
 from nbors import *
 from printer import *
 from methods import *
+import json
 
-n = 5000
+def print1darray(array):
+    liststr = "["
+    for i, row in enumerate(array):
+        liststr += str(int(row))
+        if i != len(array) - 1:
+            liststr += ", "
+    liststr += "]"
+    return liststr
+
+def print2darray(array):
+    liststr = "["
+    for i, row in enumerate(array):
+        liststr += "{"
+        for j, elem in enumerate(row):
+            liststr += str(int(elem))
+            if j != len(row) - 1:
+                liststr += ","
+        liststr += "}"
+    liststr += "]"
+    return liststr
+
+def print3darray(array):
+    liststr = "["
+    for i, a in enumerate(array):
+        liststr += "{"
+        for j, b in enumerate(a):
+            liststr += "("
+            for k, c in enumerate(b):
+                liststr += str(int(c))
+                if k != len(b) - 1:
+                    liststr += ", "
+            liststr += ")"
+        liststr += "}"
+    liststr += "]"
+    return liststr 
 
 
 
-testsol = [2, 2, 0, 0, 3, 3]
-threeopt_operator_nborhood(testsol)
+filename = "Call_7_Vehicle_3.txt"
+prob = load_problem("./" + filename)
+
+print(prob["TravelTime"].shape)
 
 """
-prob = load_problem('./Call_7_Vehicle_3.txt')
-init_sol = [0, 0, 0, 7, 7, 3, 3, 1, 5, 5, 1, 6, 6, 4, 4, 2, 2]
-init_cost = cost_function(init_sol, prob) 
+for key in prob.keys():
+    print(key)
 
-best_sol = init_sol
-best_sol_cost = cost_function(best_sol, prob) 
-print("Initial soution cost: ", best_sol_cost)
-for i in tqdm(range(n)):
-    best_nbor = None
-    best_nbor_cost = float('inf')
-    nbors = threeopt_operator_nborhood(best_sol)
-    for nbor in nbors:
-        feasibility, c = feasibility_check(nbor, prob)
-        if feasibility:
-            nbor_cost = cost_function(nbor, prob) 
-            print("Found feasible nbor with cost", nbor_cost, "")
-            if nbor_cost < best_nbor_cost:
-                best_nbor_cost = nbor_cost
-                best_nbor = nbor
-    
-    if best_nbor is not None and best_sol_cost > best_nbor_cost:
-        best_sol = best_nbor
-        best_sol_cost = best_nbor_cost
-    if best_nbor is None or best_sol_cost <= best_nbor_cost:
-        print("Exiting early")
-        # We've found local optima. Will not get better.
-        break
-        """
+
+with open("data" + filename, "w") as f:
+    f.write("n_nodes:" + str(prob["n_nodes"]) + "\n")
+    f.write("n_vehicles:" + str(prob["n_vehicles"]) + "\n")
+    f.write("n_calls:" + str(prob["n_calls"]) + "\n")
+    f.write("Cargo:" + print2darray(prob["Cargo"]) + "\n")
+    f.write("TravelTime:" + print3darray(prob["TravelTime"]) + "\n")
+    f.write("FirstTravelTime:" + print2darray(prob["FirstTravelTime"]) + "\n")
+    f.write("VesselCapacity:" + print1darray(prob["VesselCapacity"]) + "\n")
+    f.write("LoadingTime:" + print2darray(prob["LoadingTime"]) + "\n")
+    f.write("UnloadingTime:" + print2darray(prob["UnloadingTime"]) + "\n")
+    f.write("VesselCargo:" + print2darray(prob["VesselCargo"]) + "\n")
+    f.write("TravelCost:" + print3darray(prob["TravelCost"]) + "\n")
+    f.write("FirstTravelCost:" + print2darray(prob["FirstTravelCost"]) + "\n")
+    f.write("PortCost:" + print2darray(prob["PortCost"]) + "\n")
+"""
+

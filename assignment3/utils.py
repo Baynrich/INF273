@@ -113,7 +113,7 @@ def feasibility_check(solution, problem):
     feasibility = True
     tempidx = 0
     c = 'Feasible'
-    for i in range(num_vehicles):
+    for i in range(num_vehicles): 
         currentVPlan = solution[tempidx:ZeroIndex[i]]
         currentVPlan = currentVPlan - 1
         NoDoubleCallOnVehicle = len(currentVPlan)
