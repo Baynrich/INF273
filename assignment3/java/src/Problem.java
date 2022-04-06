@@ -1,5 +1,6 @@
 import java.io.File;  // Import the File class
 import java.io.FileNotFoundException;  // Import this class to handle errors
+import java.util.ArrayList;
 import java.util.Scanner; // Import the Scanner class to read text files
 
 public class Problem {
@@ -55,25 +56,78 @@ public class Problem {
     }
 
     public boolean checkFeasibility(int[] sol){
-
         int vehicleidx = 0;
         int vehicleTime = 0;
         int vehicleWeight = 0;
+        int vehicle_pos = -1;
+        ArrayList<Integer> currentlyCarrying = new ArrayList<>();
+
         for(int i = 0; i < sol.length; i++){
             if (sol[i] == 0){
+                if (vehicleidx == n_vehicles - 1){
+                    break;
+                }
                 vehicleidx += 1;
                 vehicleTime = 0;
                 vehicleWeight = 0;
+                currentlyCarrying.clear();
                 continue;
             }
-            if(vehicleTime == 0){
-                vehicleTime += firstTravelTime[vehicleidx][sol[i] - 1];
-            } else {
-                vehicleTime += travelTime[vehicleidx][sol[i-1] - 1][sol[i] - 1];
+
+            // Check for incompatible vessel and cargo
+            if(vesselCargo[vehicleidx][sol[i] - 1] == 0){
+                return false;
             }
 
-        }
+            int node_from = cargo[sol[i] - 1][0];
+            int node_to = cargo[sol[i] - 1][1];
 
+            if(currentlyCarrying.contains(sol[i])){
+                vehicleTime += travelTime[vehicleidx][node_from][node_to];
+
+                // Add time to adjust for early delivery
+                if (vehicleTime < cargo[sol[i] - 1][6]){
+                    vehicleTime = cargo[sol[i]-1][6];
+                }
+
+                // Check if time limit has been exceeded
+                if(vehicleTime > cargo[sol[i] - 1][7]){
+                    // Time window for delivery exceeded
+                    System.out.println("Time window for delivery exceeded");
+                    return false;
+                }
+
+                // Increment capacity
+                currentlyCarrying.remove(currentlyCarrying.indexOf(sol[i]));
+                vehicleWeight -= cargo[sol[i]-1][2];
+                vehicle_pos = node_to;
+            } else {
+                if(vehicleTime == 0){
+                    vehicleTime += firstTravelTime[vehicleidx][node_from];
+                } else {
+                    vehicleTime += travelTime[vehicleidx][vehicle_pos][node_from];
+                }
+
+                // Add time to adjust for early pickup
+                if (vehicleTime < cargo[sol[i]-1][4]){
+                    vehicleTime = cargo[sol[i]-1][4];
+                }
+
+                // Check if time limit has been exceeded
+                if(vehicleTime > cargo[sol[i]-1][5]){
+                    // Time window for pickup exceeded
+                    return false;
+                }
+
+                // Increment capacity
+                currentlyCarrying.add(sol[i]);
+                vehicleWeight += cargo[sol[i]-1][2];
+                vehicle_pos = node_from;
+            }
+            if (vehicleWeight > vesselCapacity[vehicleidx]){
+                return false;
+            }
+        }
         return true;
     }
 

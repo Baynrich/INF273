@@ -3,6 +3,7 @@ from nbors import *
 from printer import *
 from methods import *
 import json
+from utils import *
 
 def print1darray(array):
     liststr = "["
@@ -45,7 +46,8 @@ def print3darray(array):
 filename = "Call_7_Vehicle_3.txt"
 prob = load_problem("./" + filename)
 
-print(prob["TravelTime"].shape)
+#print(prob["TravelTime"].shape)
+print(feasibility_check([0, 3, 3, 0, 5, 5, 7, 7, 0, 6, 6, 1, 1, 4, 4, 2, 2], prob))
 
 """
 for key in prob.keys():
