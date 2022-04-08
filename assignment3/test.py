@@ -45,15 +45,12 @@ def print3darray(array):
 
 filename = "Call_7_Vehicle_3.txt"
 prob = load_problem("./" + filename)
+print(cost_function([0, 3, 3, 0, 6, 6, 0, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7], prob))
 
 #print(prob["TravelTime"].shape)
-print(feasibility_check([0, 3, 3, 0, 5, 5, 7, 7, 0, 6, 6, 1, 1, 4, 4, 2, 2], prob))
+#print(feasibility_check([0, 3, 3, 0, 5, 5, 7, 7, 0, 6, 6, 1, 1, 4, 4, 2, 2], prob))
 
 """
-for key in prob.keys():
-    print(key)
-
-
 with open("data" + filename, "w") as f:
     f.write("n_nodes:" + str(prob["n_nodes"]) + "\n")
     f.write("n_vehicles:" + str(prob["n_vehicles"]) + "\n")
@@ -69,4 +66,3 @@ with open("data" + filename, "w") as f:
     f.write("FirstTravelCost:" + print2darray(prob["FirstTravelCost"]) + "\n")
     f.write("PortCost:" + print2darray(prob["PortCost"]) + "\n")
 """
-

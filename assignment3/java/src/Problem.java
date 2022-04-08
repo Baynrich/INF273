@@ -89,6 +89,7 @@ public class Problem {
                 if (vehicleTime < cargo[sol[i] - 1][6]){
                     vehicleTime = cargo[sol[i]-1][6];
                 }
+                vehicleTime += unloadingTime[vehicleidx][sol[i]-1];
 
                 // Check if time limit has been exceeded
                 if(vehicleTime > cargo[sol[i] - 1][7]){
@@ -112,6 +113,7 @@ public class Problem {
                 if (vehicleTime < cargo[sol[i]-1][4]){
                     vehicleTime = cargo[sol[i]-1][4];
                 }
+                vehicleTime += loadingTime[vehicleidx][sol[i]-1];
 
                 // Check if time limit has been exceeded
                 if(vehicleTime > cargo[sol[i]-1][5]){
@@ -131,6 +133,46 @@ public class Problem {
         return true;
     }
 
+    public int costFunction(int[] sol){
+        //TODO - Denne er det noe uggent med, ettellerannet som ikke stemmer helt. Finn ut hva port cost gjør.
+        int vehicleidx = 0;
+        int vehiclepos = -1;
+        int total = 0;
+        int totalNotTransported = 0;
+        ArrayList<Integer> currentlyCarrying = new ArrayList<>();
+        for(int i = 0; i < sol.length; i++){
+            if(sol[i] == 0){
+                vehicleidx += 1;
+                continue;
+            }
+            // Add cost of not transporting
+            if(vehicleidx >= n_vehicles){
+                totalNotTransported += cargo[sol[i]-1][3];
+                continue;
+            }
+            // Otherwise, add cost of transporting
+            int node_from = cargo[sol[i] - 1][0];
+            int node_to = cargo[sol[i] - 1][1];
+
+            if (currentlyCarrying.contains(sol[i])){
+                currentlyCarrying.remove(currentlyCarrying.indexOf(sol[i]));
+                total += travelCost[vehicleidx][node_from][node_to];
+                vehiclepos= node_to;
+                total += portCost[vehicleidx][sol[i] - 1];
+            }
+            else {
+                currentlyCarrying.add(sol[i]);
+                if(vehiclepos == -1){
+                    total += firstTravelCost[vehicleidx][node_from];
+                }
+                else{
+                    total += travelCost[vehicleidx][vehiclepos][node_from];
+                }
+                vehiclepos = node_from;
+            }
+        }
+        return total + (totalNotTransported / 2);
+    }
 
 
     private void parse1d(String data_str, int[] target){
