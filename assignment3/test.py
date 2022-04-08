@@ -45,7 +45,7 @@ def print3darray(array):
 
 filename = "Call_7_Vehicle_3.txt"
 prob = load_problem("./" + filename)
-print(cost_function([0, 3, 3, 0, 6, 6, 0, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7], prob))
+print(cost_function([0, 0, 3, 3, 0, 6, 6, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7], prob))
 
 #print(prob["TravelTime"].shape)
 #print(feasibility_check([0, 3, 3, 0, 5, 5, 7, 7, 0, 6, 6, 1, 1, 4, 4, 2, 2], prob))

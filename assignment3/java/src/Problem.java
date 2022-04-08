@@ -139,13 +139,14 @@ public class Problem {
         int vehiclepos = -1;
         int total = 0;
         int totalNotTransported = 0;
+        int totalPorts = 0;
         ArrayList<Integer> currentlyCarrying = new ArrayList<>();
         for(int i = 0; i < sol.length; i++){
             if(sol[i] == 0){
                 vehicleidx += 1;
                 continue;
             }
-            // Add cost of not transporting
+            // Add cost of not transporting - Denne stemmer
             if(vehicleidx >= n_vehicles){
                 totalNotTransported += cargo[sol[i]-1][3];
                 continue;
@@ -158,7 +159,7 @@ public class Problem {
                 currentlyCarrying.remove(currentlyCarrying.indexOf(sol[i]));
                 total += travelCost[vehicleidx][node_from][node_to];
                 vehiclepos= node_to;
-                total += portCost[vehicleidx][sol[i] - 1];
+                totalPorts += portCost[vehicleidx][sol[i] - 1];
             }
             else {
                 currentlyCarrying.add(sol[i]);
@@ -168,10 +169,12 @@ public class Problem {
                 else{
                     total += travelCost[vehicleidx][vehiclepos][node_from];
                 }
+                totalPorts += portCost[vehicleidx][sol[i] - 1];
                 vehiclepos = node_from;
             }
         }
-        return total + (totalNotTransported / 2);
+
+        return total + (totalNotTransported / 2) + (totalPorts);
     }
 
 

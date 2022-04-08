@@ -87,7 +87,6 @@ public class Solver extends Thread {
             else{
                 neighborhood = threeopt_nbors(bestSol);
             }
-
             for (int[] nbor : neighborhood){
                 if(problem.checkFeasibility(nbor)){
                     int nborCost = problem.costFunction(nbor);
@@ -104,7 +103,6 @@ public class Solver extends Thread {
                     }
                 }
             }
-
             if(!Arrays.equals(bestNbor, new int[]{})){
                 deltaEs.add(bestCost - bestNborCost);
                 if(bestNborCost < bestCost){
@@ -114,7 +112,6 @@ public class Solver extends Thread {
             }
         }
         System.out.println("exiting initial 100");
-
         float sum = 0;
         for(float e :deltaEs){
             sum += e;
@@ -123,7 +120,7 @@ public class Solver extends Thread {
         double alpha = Math.pow(0.1 / T, 1/n);
         for(int i = 0; i < n-100; i++){
             if(i % 100 == 0){
-                System.out.println("Iteration " + i);
+                System.out.println("Iteration " + i + " with method " + nbormethod);
             }
             int[] bestNbor = new int[]{};
             float bestNborCost = Float.POSITIVE_INFINITY;

@@ -57,6 +57,7 @@ def annealing(init_sol, operator, prob):
             if best_sol_cost > best_nbor_cost:
                 best_sol = best_nbor
                 best_sol_cost = best_nbor_cost
+
     T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
     alpha = np.power(0.1 / T, 1 / n)
     
@@ -79,7 +80,6 @@ def annealing(init_sol, operator, prob):
                         best_nbor = nbor
         
         if best_nbor is not None:
-            delta_es.append(best_nbor_cost - best_sol_cost)
             if best_sol_cost > best_nbor_cost:
                 best_sol = best_nbor
                 best_sol_cost = best_nbor_cost

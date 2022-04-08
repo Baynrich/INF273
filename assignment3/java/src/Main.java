@@ -7,7 +7,10 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String args[]) throws IOException {
-        int[] initSol = new int[] {0, 0, 0, 3, 3, 6, 6, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7};
+        int[] initSol = new int[] {0, 0, 3, 3, 0, 6, 6, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7};
+        Solver solver = new Solver("./dataCall_7_Vehicle_3.txt");
+        Problem problem = solver.getProblem();
+        System.out.println(problem.costFunction(initSol));
         File outfile = new File("./c7v3out.txt");
         outfile.createNewFile();
         FileWriter myWriter = new FileWriter("./c7v3out.txt");
@@ -18,7 +21,6 @@ public class Main {
         doTheThing(myWriter, "./dataCall_7_Vehicle_3.txt", "twoopt", "anneal", initSol);
         doTheThing(myWriter, "./dataCall_7_Vehicle_3.txt", "threeopt", "anneal", initSol);
         myWriter.close();
-
     }
 
 
