@@ -7,10 +7,11 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String args[]) throws IOException {
-        int[] initSol = new int[] {0, 0, 3, 3, 0, 6, 6, 1, 1, 4, 4, 2, 2, 5, 5, 7, 7};
+        int[] initSol = new int[] {0, 2, 2, 0, 3, 3, 0, 6, 6, 1, 1, 4, 4, 5, 5, 7, 7};
         Solver solver = new Solver("./dataCall_7_Vehicle_3.txt");
+        System.out.println(Arrays.toString(solver.reassignCall(initSol)));
         Problem problem = solver.getProblem();
-        System.out.println(problem.costFunction(initSol));
+        //System.out.println(problem.costFunction(initSol));
         if(false) {
             System.out.println(problem.costFunction(initSol));
             File outfile = new File("./c7v3out.txt");
@@ -40,7 +41,7 @@ public class Main {
             for(int i = 0; i < num; i++){
                 Solver solver = new Solver(datafile);
                 threads.add(solver);
-                solver.run(initSol, sols, operator, nbormethod);
+                solver.run(initSol, sols);
             }
 
             // Wait for threads to finish
