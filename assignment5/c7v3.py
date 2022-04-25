@@ -4,8 +4,9 @@ from nbors import *
 from methods import *
 import time
 
+
 def run_problem(problem, initial_solution):
-    best_sol, best_sol_cost = annealing(initial_solution, problem)
+    best_sol, best_sol_cost = alns(initial_solution, problem)
     return best_sol, best_sol_cost
 
 problem = load_problem('./Call_7_Vehicle_3.txt')
@@ -16,18 +17,10 @@ sols_iter = []
 costs_iter = []
 
 start_time = time.time()
-for i in range(10):
+for i in range(1):
     sols, costs = run_problem(problem, init_sol)
     sols_iter.append(sols)
     costs_iter.append(costs)
 end_time = time.time()
 
-print("Initial objective:", init_cost)
-print("Avg objective:", np.mean(costs_iter))
-print("Top objective", min(costs_iter))
-print("Improvement %:", (min(costs_iter) - init_cost) / init_cost)
-print("Time:", end_time - start_time)
-
-print(sols_iter[costs_iter.index(min(costs_iter))])
-print(feasibility_check(sols_iter[costs_iter.index(min(costs_iter))], problem))
-
+reassign_all_calls(init_sol, )

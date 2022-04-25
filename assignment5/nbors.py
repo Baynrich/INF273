@@ -1,5 +1,4 @@
 import random
-random.seed(27)
 
 #TODO - update solution representation to only show retired calls once
 def reassign_call(sol, prob):
@@ -67,7 +66,6 @@ def reorder_vehicle_calls(sol, prob):
     return flattened
     
 
-#TODO - update solution representation to only show retired calls once
 def assign_all_retireds(sol, prob):
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
@@ -101,3 +99,15 @@ def assign_all_retireds(sol, prob):
     return flattened
             
 
+
+def reassign_all_calls(sol, prob):
+    vehicles = [[] * prob["n_vehicles"] + 1]
+    for call in range(prob["n_calls"]):
+        vehicle = random.randint(0, len(vehicles)-1)
+        vehicles[vehicle].insert(random.randint(0, vehicles[vehicle]-1), (call + 1))
+    flattened = []
+    for i, vehicle in enumerate(vehicles):
+        flattened += vehicle
+        if (i < len(vehicles) - 1):
+            flattened += [0]
+    return flattened
