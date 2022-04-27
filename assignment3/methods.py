@@ -2,8 +2,33 @@ from utils import *
 from tqdm import tqdm
 import random
 import numpy as np
+from nbors import oneopt_operator_nborhood, twoopt_operator_nborhood, threeopt_operator_nborhood
+import time
 
 n = 10000
+
+def run_problem(problem, initial_solution):
+    methods = [localsearch, annealing]
+    operators = [oneopt_operator_nborhood, twoopt_operator_nborhood, threeopt_operator_nborhood]
+    sols = []
+    costs = []
+    times = []
+    for method in methods:
+        for operator in operators:
+            cur_m_o_sols = []
+            cur_m_o_costs = []
+            cur_m_o_times = []
+            for i in range(10):
+                st = time.time()
+                best_sol, best_sol_cost = method(initial_solution, operator, problem)
+                et = time.time()
+                cur_m_o_sols.append(best_sol)
+                cur_m_o_costs.append(best_sol_cost)
+                cur_m_o_times.append(et - st)
+            sols.append(cur_m_o_sols)
+            costs.append(cur_m_o_costs)
+            times.append(cur_m_o_times)
+    return sols, costs, times
 
 
 def localsearch(init_sol, operator, prob):
