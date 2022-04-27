@@ -1,36 +1,55 @@
+from multiprocessing.dummy import current_process
 import random
+import numpy as np
 
 
-#TODO - update solution representation to only show retired calls once
 def reassign_call(sol, prob):
-    """ Move a chosen call between vehicles. """
-    r_call = random.randint(1, prob["n_calls"])
-    r_sol = sol.copy()
-    r_sol = [call for call in r_sol if call != r_call]
 
-    currentVehicle = []
-    vehicles = []
-    for call in r_sol:
-        if call == 0:
-            vehicles.append(currentVehicle)
-            currentVehicle = []
-        else:
-            currentVehicle.append(call)
-    vehicles.append(currentVehicle)
+    target_v = random.randint(0, prob["n_vehicles"])
+    target_c = random.randint(1, prob["n_calls"])
+    r_sol = np.copy(sol)
+    r_sol = r_sol[r_sol != target_c]
 
-    # Insert
-    to_insert = random.randint(0, len(vehicles)-1)
+    prevzpos = -1
+    zctr = 0
+    sidx = -1
+    eidx = -1
+    for i in range(len(r_sol)):
+        if r_sol[i] == 0:
+            zctr += 1
+            if  target_v == 0:
+                print("Placing in first position")
+                sidx = 0
+                eidx = i
+                break
+            if zctr == prob["n_vehicles"] and target_v == prob["n_vehicles"]:
+                print("Retiring call")
+                sidx = i+1
+                eidx = len(r_sol) - 1
+                break
+
+            if(target_v != prob["n_vehicles"]):
+                if zctr == target_v:
+                    sidx = i + 1
+                    continue
+                if zctr == target_v + 1:
+                    eidx = i
+                    break
+
+    print("Call", target_c)
+    print("Vehicle", target_v)
+    print("Into", r_sol)
+    print("Starting at", sidx, "Ending at", eidx)
+    # Reinsert call  
     for i in range(2):
-        temp = len(vehicles[to_insert])
-        insertpos = random.randint(0, temp)
-        vehicles[to_insert].insert(insertpos, r_call)
-    # Flatten
-    flattened = []
-    for i, vehicle in enumerate(vehicles):
-        flattened += vehicle
-        if (i < len(vehicles) - 1):
-            flattened += [0]
-    return flattened
+        insertpos = random.randint(sidx, eidx + i)
+        r_sol = np.insert(r_sol, insertpos, target_c)
+    
+    print("Result", r_sol)
+
+    return r_sol
+
+
 
 def reorder_vehicle_calls(sol, prob):
     """ Reinsert a call within the schedule of a vehicle """
@@ -98,14 +117,3 @@ def assign_all_retireds(sol, prob):
     return flattened
             
 
-def reassign_all_calls(sol, prob):
-    vehicles = [[] * prob["n_vehicles"] + 1]
-    for call in range(prob["n_calls"]):
-        vehicle = random.randint(0, len(vehicles)-1)
-        vehicles[vehicle].insert(random.randint(0, vehicles[vehicle]-1), (call + 1))
-    flattened = []
-    for i, vehicle in enumerate(vehicles):
-        flattened += vehicle
-        if (i < len(vehicles) - 1):
-            flattened += [0]
-    return flattened

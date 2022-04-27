@@ -17,10 +17,10 @@ def alns(init_sol, prob):
     best_sol_cost = cost_function(best_sol, prob)
     global_best_sol = init_sol
     global_best_cost = best_sol_cost
-    delta_es = [0]
+    delta_es = np.array([0])
 
-    visited = []
-    operator_scores = [1 / n_operators] * n_operators
+    visited = np.array([])
+    operator_scores = np.array([1 / n_operators] * n_operators)
     cooldown = np.linspace(0.8, 0.05, num=(n))
     feasibles = 0
     
@@ -32,7 +32,7 @@ def alns(init_sol, prob):
 
         if not nbor in visited:
             operator_scores[operator] += new_sol_score
-            visited.append(nbor)
+            visited = np.append(visited, nbor)
 
         if feasibility_check(nbor, prob):
             feasibles += 1
@@ -45,7 +45,7 @@ def alns(init_sol, prob):
                     global_best_sol = best_sol
                     operator_scores[operator] += best_score
             else:
-                delta_es.append(delta_e)
+                delta_es = np.append(delta_es, delta_e)
                 randval = random.random()
                 if randval < cooldown[i]:
                     best_sol_cost = nbor_cost
