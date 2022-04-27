@@ -10,8 +10,4 @@ init_sol = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2,
 init_cost = cost_function(init_sol, problem)
 
 sols, costs, times = run_problem(problem, init_sol)
-print(sols)
-print(sols)
-print(times)
-
-#printer(costs, sols, init_cost, times, problem)
+printer(costs, sols, init_cost, times, problem)
