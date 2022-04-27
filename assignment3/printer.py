@@ -2,6 +2,7 @@ import numpy as np
 from utils import cost_function
 
 def printer(costs_iter, sols_iter, init_cost, times_iter, problem):
+    print("init_cost", init_cost)
     best_local_1opt = min([op[0] for op in costs_iter])
     print("Avg Local 1-opt", np.mean([op[0] for op in costs_iter]))
     print("Best Local 1-opt", best_local_1opt)

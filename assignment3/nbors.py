@@ -1,14 +1,17 @@
-from utils import feasibility_check
-
+from utils import cost_function, feasibility_check
+import random
 
 def oneopt_operator_nborhood(cur_sol, prob):
     nbors = []
-    for i in range(len(cur_sol)):
+
+    startlook = random.randint(0, len(cur_sol))
+    for i in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
         currentlist = []
         workable = cur_sol.copy()
         item_to_insert = workable.pop(i)
         if len(nbors) < 1:
-            for j in range(len(cur_sol)):
+            startlook = random.randint(0, len(cur_sol))
+            for j in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
                 if i == j or cur_sol[i] == cur_sol[j]:
                     continue
                 insertable = workable.copy()
@@ -17,7 +20,7 @@ def oneopt_operator_nborhood(cur_sol, prob):
                 if insertable != cur_sol and solution_sanity(insertable) and feasibility_check(insertable, prob):
                     currentlist.append(insertable)
                     break
-            nbors = nbors + currentlist
+        nbors = nbors + currentlist
     retval = []
     for nbor in nbors:
         if nbor not in retval:
@@ -26,9 +29,11 @@ def oneopt_operator_nborhood(cur_sol, prob):
 
 def twoopt_operator_nborhood(cur_sol, prob):
     nbors = []
-    for i in range(len(cur_sol)):
+    startlook = random.randint(0, len(cur_sol))
+    for i in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
         if len(nbors) < 1:
-            for j in range(len(cur_sol)):
+            startlook = random.randint(0, len(cur_sol))
+            for j in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
                 if i == j or cur_sol[i] == cur_sol[j]:
                     continue
                 insertable = cur_sol.copy()
@@ -46,11 +51,14 @@ def twoopt_operator_nborhood(cur_sol, prob):
 
 def threeopt_operator_nborhood(cur_sol, prob):
     nbors = []
-    for i in range(len(cur_sol)):
+    startlook = random.randint(0, len(cur_sol))
+    for i in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
         if len(nbors) < 1:
-            for j in range(len(cur_sol)):
+            startlook = random.randint(0, len(cur_sol))
+            for j in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
                 if len(nbors) < 1:
-                    for k in range(len(cur_sol)):
+                    startlook = random.randint(0, len(cur_sol))
+                    for k in [*range(startlook, len(cur_sol))] + [*range(0, startlook)]:
                         if (i == j or j == k or i == k) or (cur_sol[i] == cur_sol[j] and cur_sol[j] == cur_sol[k]):
                             continue
                         insertable = cur_sol.copy()

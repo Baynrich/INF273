@@ -1,15 +1,15 @@
 from nbors import assign_all_retireds, reassign_call, reorder_vehicle_calls
-from utils import *
+from utils import cost_function, feasibility_check 
 from tqdm import tqdm
 import random
 import numpy as np
+
 
 n = 25000
 n_operators = 3
 new_sol_score = 0.001
 improvement_score = 0.1
 best_score = 0.25
-
 
 
 def alns(init_sol, prob):

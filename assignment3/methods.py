@@ -5,6 +5,7 @@ import numpy as np
 
 n = 10000
 
+
 def localsearch(init_sol, operator, prob):
     best_sol = init_sol
     best_sol_cost = cost_function(best_sol, prob)
@@ -14,7 +15,6 @@ def localsearch(init_sol, operator, prob):
         if(nbor_cost < best_sol_cost):
             best_sol_cost = nbor_cost
             best_sol = nbor
-
     return best_sol, best_sol_cost
 
 
@@ -29,7 +29,6 @@ def annealing(init_sol, operator, prob):
         nbor = operator(best_sol, prob)
         nbor_cost = cost_function(nbor, prob)
         delta_e = nbor_cost - best_sol_cost
-
         if delta_e > 0:
             best_sol = nbor
             best_sol_cost = nbor_cost
@@ -48,6 +47,7 @@ def annealing(init_sol, operator, prob):
     alpha = np.power(0.1 / T, 1 / n)
     
     for i in tqdm(range(n - 100)):
+        
         nbor = operator(best_sol, prob)
         nbor_cost = cost_function(nbor, prob)
         delta_e = nbor_cost - best_sol_cost

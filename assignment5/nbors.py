@@ -1,5 +1,6 @@
 import random
 
+
 #TODO - update solution representation to only show retired calls once
 def reassign_call(sol, prob):
     """ Move a chosen call between vehicles. """
@@ -30,7 +31,6 @@ def reassign_call(sol, prob):
         if (i < len(vehicles) - 1):
             flattened += [0]
     return flattened
-
 
 def reorder_vehicle_calls(sol, prob):
     """ Reinsert a call within the schedule of a vehicle """
@@ -65,7 +65,6 @@ def reorder_vehicle_calls(sol, prob):
             flattened += [0]
     return flattened
     
-
 def assign_all_retireds(sol, prob):
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
@@ -98,7 +97,6 @@ def assign_all_retireds(sol, prob):
             flattened += [0]
     return flattened
             
-
 
 def reassign_all_calls(sol, prob):
     vehicles = [[] * prob["n_vehicles"] + 1]

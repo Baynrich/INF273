@@ -1,6 +1,4 @@
 import numpy as np
-from collections import namedtuple
-
 
 def load_problem(filename):
     """
@@ -92,7 +90,6 @@ def load_problem(filename):
     }
     return output
 
-
 def feasibility_check(solution, problem):
     """
     :rtype: tuple
@@ -164,7 +161,6 @@ def feasibility_check(solution, problem):
 
     return feasibility
 
-
 def cost_function(Solution, problem):
     """
     :param Solution: the proposed solution for the order of calls in each vehicle
@@ -190,13 +186,13 @@ def cost_function(Solution, problem):
     for i in range(num_vehicles + 1):
         currentVPlan = Solution[tempidx:ZeroIndex[i]]
         currentVPlan = currentVPlan - 1
-        NoDoubleCallOnVehicle = len(currentVPlan)
+        currentVPlanLength = len(currentVPlan)
         tempidx = ZeroIndex[i] + 1
 
         if i == num_vehicles:
             NotTransportCost = np.sum(Cargo[currentVPlan, 3]) / 2
         else:
-            if NoDoubleCallOnVehicle > 0:
+            if currentVPlanLength > 0:
                 sortRout = np.sort(currentVPlan, kind='quicksort')
                 I = np.argsort(currentVPlan, kind='quicksort')
                 Indx = np.argsort(I, kind='quicksort')
@@ -209,6 +205,7 @@ def cost_function(Solution, problem):
 
                 FirstVisitCost = FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]
                 RouteTravelCost[i] = np.sum(np.hstack((FirstVisitCost, Diag.flatten())))
+                print(PortCost)
                 CostInPorts[i] = np.sum(PortCost[i, currentVPlan]) / 2
 
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
