@@ -47,25 +47,19 @@ def reorder_vehicle_calls(sol, prob):
     """ Reinsert a call within the schedule of a vehicle """
 
     # Do not allow selecting retired calls on this occasion
-
-
     ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
     reorderables = [zi for i, zi in enumerate(ZeroIndex) if not(i == 0 and zi < 3 or i > 0 and zi - ZeroIndex[i-1] < 3)]
-    # No vehucles can be reordered. Return same solution.
+    
+    # No vehicles can be reordered - return same solution.
     if len(reorderables) < 1:
         return sol
 
     eidx = random.choice(reorderables)
-    print(eidx)
     sidx = 0
     for i in range(eidx):
         if sol[eidx - (i+1)] == 0:
             sidx = eidx - (i)
             break
-    
-
-    print(sidx)
-
     to_reorder = random.randint(sidx, eidx-1)
     to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
     target = sol[to_target]
