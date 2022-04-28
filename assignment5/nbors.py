@@ -67,10 +67,11 @@ def reorder_vehicle_calls(sol, prob):
     sol[to_reorder] = target
     return sol
 
-        
-
     
 def assign_all_retireds(sol, prob):
+
+
+
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
     currentVehicle = []
