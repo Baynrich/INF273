@@ -17,7 +17,7 @@ def oneopt_operator_nborhood(cur_sol, prob):
                 insertable = workable.copy()
                 insertable.insert(j, item_to_insert)
                 
-                if insertable != cur_sol and solution_sanity(insertable) and feasibility_check(insertable, prob):
+                if insertable != cur_sol and solution_sanity(insertable):
                     currentlist.append(insertable)
                     break
         nbors = nbors + currentlist
@@ -40,7 +40,7 @@ def twoopt_operator_nborhood(cur_sol, prob):
                 i_val = insertable[i]
                 insertable[i] = insertable[j]
                 insertable[j] = i_val
-                if insertable != cur_sol and solution_sanity(insertable) and feasibility_check(insertable, prob):
+                if insertable != cur_sol and solution_sanity(insertable):
                     nbors.append(insertable)
                     break
     retval = []
@@ -68,7 +68,7 @@ def threeopt_operator_nborhood(cur_sol, prob):
                         insertable[i] = k_val
                         insertable[j] = i_val
                         insertable[k] = j_val
-                        if insertable != cur_sol and solution_sanity(insertable) and feasibility_check(insertable, prob):
+                        if insertable != cur_sol and solution_sanity(insertable):
                             nbors.append(insertable)
                             break
     retval = []

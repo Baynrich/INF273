@@ -3,10 +3,10 @@ import random
 import numpy as np
 
 
-def reassign_call(sol, prob):
-    """ Now works with numpy conversion now """
-    target_v = random.randint(0, prob["n_vehicles"])
-    target_c = random.randint(1, prob["n_calls"])
+
+def reassign_call(sol, n_vehicles, n_calls):
+    target_v = random.randint(0, n_vehicles)
+    target_c = random.randint(1, n_vehicles)
     r_sol = np.copy(sol)
     r_sol = r_sol[r_sol != target_c]
 
@@ -17,17 +17,15 @@ def reassign_call(sol, prob):
         if r_sol[i] == 0:
             zctr += 1
             if  target_v == 0:
-                print("Placing in first position")
                 sidx = 0
                 eidx = i
                 break
-            if zctr == prob["n_vehicles"] and target_v == prob["n_vehicles"]:
-                print("Retiring call")
+            if zctr == n_vehicles and target_v == n_vehicles:
                 sidx = i+1
                 eidx = len(r_sol) - 1
                 break
 
-            if(target_v != prob["n_vehicles"]):
+            if(target_v != n_vehicles):
                 if zctr == target_v:
                     sidx = i + 1
                     continue
@@ -37,22 +35,31 @@ def reassign_call(sol, prob):
 
     # Reinsert call  
     for i in range(2):
-        insertpos = random.randint(sidx, eidx + i)
-        r_sol = np.insert(r_sol, insertpos, target_c)
+        try:
+            insertpos = random.randint(sidx, eidx + i)
+            r_sol = np.insert(r_sol, insertpos, target_c)
+        # Edge case whenever retiring when all other calls are active
+        except:
+            r_sol = np.insert(r_sol, sidx, target_c)
     return r_sol
 
 
 
-def reorder_vehicle_calls(sol, prob):
+def reorder_vehicle_calls(sol, n_vehicles, n_calls):
     """ Reinsert a call within the schedule of a vehicle """
-
     # Do not allow selecting retired calls on this occasion
     ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
-    reorderables = [zi for i, zi in enumerate(ZeroIndex) if not(i == 0 and zi < 3 or i > 0 and zi - ZeroIndex[i-1] < 3)]
-    
-    # No vehicles can be reordered - return same solution.
+    reorderables = []
+    for i, idx in enumerate(ZeroIndex):
+        if i == 0 and idx < 4:
+            continue
+        if idx - ZeroIndex[i-1] < 4:
+            continue
+        reorderables.append(idx)
+
+    # No vehicles can be reordered - reassign instead.
     if len(reorderables) < 1:
-        return sol
+        return reassign_call(sol, n_vehicles, n_calls)
 
     eidx = random.choice(reorderables)
     sidx = 0
@@ -60,6 +67,7 @@ def reorder_vehicle_calls(sol, prob):
         if sol[eidx - (i+1)] == 0:
             sidx = eidx - (i)
             break
+
     to_reorder = random.randint(sidx, eidx-1)
     to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
     target = sol[to_target]
@@ -68,9 +76,7 @@ def reorder_vehicle_calls(sol, prob):
     return sol
 
     
-def assign_all_retireds(sol, prob):
-
-
+def assign_all_retireds(sol):
 
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """

@@ -167,7 +167,6 @@ def cost_function(Solution, problem):
     :param problem:
     :return:
     """
-
     num_vehicles = problem['n_vehicles']
     Cargo = problem['Cargo']
     TravelCost = problem['TravelCost']

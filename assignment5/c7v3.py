@@ -3,15 +3,16 @@ from utils import *
 from nbors import *
 from methods import *
 import time
+from utils import cost_function, feasibility_check 
 
+c7list = [0] * 3 + [i, i]
 
-def run_problem(problem, initial_solution):
-    best_sol, best_sol_cost = alns(initial_solution, problem)
+def run_problem(init_sol, prob):
+    best_sol, best_sol_cost = alns(init_sol, prob)
+    print(best_sol)
+    print(best_sol_cost)
     return best_sol, best_sol_cost
 
-problem = load_problem('./Call_7_Vehicle_3.txt')
-init_sol = np.array([1, 1, 0, 2, 2, 3, 3, 0, 4, 4, 5, 5, 6, 6, 0, 7, 7])
-print(init_sol)
-print(reorder_vehicle_calls(init_sol, problem))
-
-
+prob = load_problem('./Call_7_Vehicle_3.txt')
+init_sol = np.array([0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7])
+run_problem(init_sol, prob)
