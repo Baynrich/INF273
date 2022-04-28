@@ -205,7 +205,6 @@ def cost_function(Solution, problem):
 
                 FirstVisitCost = FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]
                 RouteTravelCost[i] = np.sum(np.hstack((FirstVisitCost, Diag.flatten())))
-                print(PortCost)
                 CostInPorts[i] = np.sum(PortCost[i, currentVPlan]) / 2
 
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
