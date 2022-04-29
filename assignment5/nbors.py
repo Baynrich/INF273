@@ -1,4 +1,3 @@
-from multiprocessing.dummy import current_process
 import random
 import numpy as np
 from utils import cost_function
@@ -77,7 +76,7 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
     return sol
 
     
-def assign_retireds(sol, n_vehicles, n_calls, prob):
+def assign_retireds(sol, prob):
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
     currentVehicle = []
@@ -95,7 +94,7 @@ def assign_retireds(sol, n_vehicles, n_calls, prob):
 
     # No retired calls to reassign -> reorder some vehicle call instead.
     if len(retireds) == 0:
-        return(reorder_vehicle_calls(sol, n_vehicles, n_calls))
+        return(reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"]))
 
 
     # Un-retire random amount of calls. Start by un-retiring calls with highest cost of not transporting.
@@ -119,27 +118,33 @@ def assign_retireds(sol, n_vehicles, n_calls, prob):
         flattened += vehicle
         if (i < len(vehicles) - 2):
             flattened += [0]
-    return flattened
+    return np.array(flattened)
             
 
 def retire_calls(sol, prob):
     ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
     r_sol = list(set(sol[:ZeroIndex[-1]]))
+    r_sol.remove(0)
+    if len(r_sol) < 1:
+        return assign_retireds(sol, prob)
     costs = [[i, 0] for i in r_sol]
     vehicle = 0
-    for i in range(ZeroIndex[-1]):
-        if(i == 0):
+    for i in range(len(sol)):
+        if not sol[i] in r_sol:
+            continue
+        if(sol[i] == 0):
             vehicle += 1
             continue
-        curcost = cost_function([0] * vehicle + [i, i] + [0] * (prob["n_vehicles"] - vehicle), prob)
-        costs[sol[i]][1] = curcost
-    costs = costs[1:]
-    costs.sort(key = lambda tuple: tuple[1], reverse=True)
-    
-    n_to_retire = random.randint(1, 3)
+        trialsol = [0] * vehicle + [sol[i], sol[i]] + [0] * (prob["n_vehicles"] - vehicle)
+        curcost = cost_function(trialsol, prob)
+        for j in range(len(costs)):
+            if costs[j][0] == sol[i]:
+                costs[j][1] = curcost
+                break
+    costs.sort(key = lambda tuple: tuple[1], reverse=True)    
+    n_to_retire = random.randint(1, min(3, len(r_sol)))
     for i in range(n_to_retire):
         to_retire = costs[i][0]
-        print("retiring", to_retire)
         sol = sol[sol != to_retire]
         sol = np.append(sol, costs[i][0])
         sol = np.append(sol, costs[i][0])

@@ -1,5 +1,5 @@
 from math import sqrt
-from nbors import assign_retireds, reassign_call, reorder_vehicle_calls
+from nbors import assign_retireds, reassign_call, reorder_vehicle_calls, retire_calls
 from utils import cost_function, feasibility_check 
 from tqdm import tqdm
 import random
@@ -8,7 +8,7 @@ import numpy as np
 
 
 n = 25000
-n_operators = 3
+n_operators = 4
 new_sol_score = 1
 improvement_score = 2
 best_score = 6
@@ -26,7 +26,7 @@ def alns(init_sol, prob):
     visited = np.array([])
     operator_probabilities = np.array([1 / n_operators] * n_operators)
     operator_scores = np.array([1] * n_operators)
-    operator_decay = np.ones((3, 3))
+    operator_decay = np.ones((n_operators, 3))
 
 
     feasibles = 0
@@ -95,11 +95,8 @@ def alns(init_sol, prob):
             for j in range(len(operator_probabilities)):
                 operator_probabilities[j] = operator_scores[j] / opsum
             operator_scores = np.array([1] * n_operators)
-                
-            
-    print(operator_probabilities)
-    print("feasibles", feasibles)
-    print("posdelts", posdelts)
+            operator_decay = np.ones((n_operators, 3))
+
     return global_best_sol, global_best_cost
 
 
@@ -111,7 +108,10 @@ def select_nbor_op(sol, prob, operator_probabilities):
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
         nbor = reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"])
-    else:
+    elif choice >= operator_probabilities[1] and choice < (operator_probabilities[0] + operator_probabilities[1] + operator_probabilities[2] ):
         operator = 2
-        nbor = assign_retireds(sol, prob["n_vehicles"], prob["n_calls"], prob)
+        nbor = assign_retireds(sol, prob)
+    else:
+        operator = 3
+        nbor = retire_calls(sol, prob)
     return operator, nbor
