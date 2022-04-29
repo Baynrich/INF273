@@ -14,6 +14,8 @@ def annealing(init_sol, prob):
     global_best_sol = init_sol
     global_best_cost = best_sol_cost
     delta_es = [0]
+    feasibles = 0
+    posdelts = 0
 
     operator_scores = [100, 100, 100]
     for i in tqdm(range(100)):
@@ -32,7 +34,9 @@ def annealing(init_sol, prob):
         delta_e = nbor_cost - best_sol_cost
 
         if feasibility_check(nbor, prob):
+            feasibles += 1
             if delta_e > 0:
+                posdelts += 1
                 operator_scores[operator] += 1
                 best_sol = nbor
                 best_sol_cost = nbor_cost
@@ -73,6 +77,7 @@ def annealing(init_sol, prob):
         delta_e = nbor_cost - best_sol_cost
 
         if feasibility_check(nbor, prob):
+            feasibles += 1
             if delta_e > 0:
                 operator_scores[operator] += 1
                 best_sol = nbor
@@ -84,9 +89,13 @@ def annealing(init_sol, prob):
                 operator_scores[operator] -= 0.1
                 delta_es.append(delta_e)
                 randval = random.random()
+                if(i % 1000 == 0):
+                    print(np.exp(-delta_e / T))
                 if randval < np.exp(-delta_e / T):
                     best_sol_cost = nbor_cost
                     best_sol = nbor
         T = T * alpha
     print(operator_scores)
+    print("feasibles", feasibles)
+    print("posdelts", posdelts)
     return global_best_sol, global_best_cost

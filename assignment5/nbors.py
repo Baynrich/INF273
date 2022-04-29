@@ -76,7 +76,7 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
     return sol
 
     
-def assign_all_retireds(sol):
+def assign_retireds(sol, n_vehicles, n_calls, prob):
 
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
@@ -92,14 +92,27 @@ def assign_all_retireds(sol):
 
     # Reassign all retired calls to vehicles.
     retireds = vehicles.pop()
+
+    # No retired calls to reassign -> reorder some vehicle call instead.
+    if len(retireds) == 0:
+        return(reorder_vehicle_calls(sol, n_vehicles, n_calls))
+
+
+    # Un-retire random amount of calls. Start by un-retiring calls with highest cost of not transporting.
     retireds = list(set(retireds))
-    for call in retireds:
+    retireds = [(call, prob["Cargo"][call-1][3]) for call in retireds]
+    retireds.sort(key = lambda tuple: tuple[1], reverse=True)
+    n_to_assign = random.randint(1, len(retireds) - 1)
+
+    for call in retireds[0:n_to_assign]:
         assigned_vehicle = random.randint(0, len(vehicles)-1)
         for i in range(2):
             insert_pos = random.randint(0, len(vehicles[assigned_vehicle]))
-            vehicles[assigned_vehicle].insert(insert_pos, call)
+            vehicles[assigned_vehicle].insert(insert_pos, call[0])
     
-    vehicles.append([])
+
+    vehicles.append([call[0] for call in retireds[n_to_assign:]])
+    vehicles.append([call[0] for call in retireds[n_to_assign:]])
 
     # Flatten
     flattened = []
