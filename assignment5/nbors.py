@@ -1,6 +1,7 @@
 from multiprocessing.dummy import current_process
 import random
 import numpy as np
+from utils import cost_function
 
 
 
@@ -77,7 +78,6 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
 
     
 def assign_retireds(sol, n_vehicles, n_calls, prob):
-
     """ This operator is intended to move us far from our current solution in the solution space.
         Moves many calls, where other operators move only one. """
     currentVehicle = []
@@ -102,7 +102,7 @@ def assign_retireds(sol, n_vehicles, n_calls, prob):
     retireds = list(set(retireds))
     retireds = [(call, prob["Cargo"][call-1][3]) for call in retireds]
     retireds.sort(key = lambda tuple: tuple[1], reverse=True)
-    n_to_assign = random.randint(1, len(retireds) - 1)
+    n_to_assign = 1 if len(retireds) < 2 else random.randint(1, len(retireds) - 1)
 
     for call in retireds[0:n_to_assign]:
         assigned_vehicle = random.randint(0, len(vehicles)-1)
@@ -113,13 +113,36 @@ def assign_retireds(sol, n_vehicles, n_calls, prob):
 
     vehicles.append([call[0] for call in retireds[n_to_assign:]])
     vehicles.append([call[0] for call in retireds[n_to_assign:]])
-
     # Flatten
     flattened = []
     for i, vehicle in enumerate(vehicles):
         flattened += vehicle
-        if (i < len(vehicles) - 1):
+        if (i < len(vehicles) - 2):
             flattened += [0]
     return flattened
             
 
+def retire_calls(sol, prob):
+    ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
+    r_sol = list(set(sol[:ZeroIndex[-1]]))
+    costs = [[i, 0] for i in r_sol]
+    vehicle = 0
+    for i in range(ZeroIndex[-1]):
+        if(i == 0):
+            vehicle += 1
+            continue
+        curcost = cost_function([0] * vehicle + [i, i] + [0] * (prob["n_vehicles"] - vehicle), prob)
+        costs[sol[i]][1] = curcost
+    costs = costs[1:]
+    costs.sort(key = lambda tuple: tuple[1], reverse=True)
+    
+    n_to_retire = random.randint(1, 3)
+    for i in range(n_to_retire):
+        to_retire = costs[i][0]
+        print("retiring", to_retire)
+        sol = sol[sol != to_retire]
+        sol = np.append(sol, costs[i][0])
+        sol = np.append(sol, costs[i][0])
+    return sol
+
+    

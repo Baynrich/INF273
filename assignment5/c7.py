@@ -4,7 +4,7 @@ from nbors import *
 from methods import *
 from utils import cost_function, feasibility_check 
 
-probname = './Call_18_Vehicle_5.txt'
+probname = './Call_7_Vehicle_3.txt'
 prob = load_problem(probname)
 init_sol = [0] * prob["n_vehicles"]
 for i in range(prob["n_calls"]):
@@ -26,4 +26,5 @@ def run_problem(init_sol, prob):
 
 
 #run_problem(init_sol, prob)
-print(assign_retireds(init_sol, prob["n_vehicles"], prob["n_calls"], prob))
+print(retire_calls(np.array([1, 1, 0, 2, 2, 0, 3, 3, 0, 4, 4, 5, 5, 6, 6, 7, 7]), prob))
+
