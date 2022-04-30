@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from utils import cost_function
+from utils import cost_function, feasibility_check
 
 
 
@@ -155,13 +155,20 @@ def reassign_all(sol, prob):
     all_calls = [i+1 for i in range(prob["n_calls"])]
     r_sol = np.array([0 for i in range(prob["n_vehicles"])])
     while(len(all_calls) > 0):
-        cur_call = all_calls.pop(random.choice(all_calls))
+        cur_call = random.choice(all_calls)
+        all_calls.remove(cur_call)
         ZeroIndex = np.array(np.where(r_sol == 0)[0], dtype=int)
+        inserted = False
 
         for index in ZeroIndex:
             cand_sol = r_sol.copy()
-
-
-
-
-        pass
+            np.insert(cand_sol, index, cur_call)
+            np.insert(cand_sol, index, cur_call)
+            if(feasibility_check(cand_sol, prob)):
+                r_sol = cand_sol
+                inserted = True
+                break
+        if not inserted:
+            np.append(r_sol, cur_call)
+            np.append(r_sol, cur_call)
+    return r_sol

@@ -1,5 +1,5 @@
 from math import sqrt
-from nbors import assign_retireds, reassign_call, reorder_vehicle_calls, retire_calls
+from nbors import assign_retireds, reassign_call, reorder_vehicle_calls, retire_calls, reassign_all
 from utils import cost_function, feasibility_check 
 from tqdm import tqdm
 import random
@@ -43,8 +43,8 @@ def alns(init_sol, prob):
             alpha = np.power(0.1 / T, 1 / n)
 
         # If we get stuck on the same solution, jump into some new solution and try from there.
-        if n_since_last_better >= 50:
-            best_sol = assign_retireds(init_sol, prob)
+        if n_since_last_better >= 100:
+            best_sol = reassign_all(init_sol, prob)
 
 
         operator, nbor = select_nbor_op(best_sol, prob, operator_probabilities)
