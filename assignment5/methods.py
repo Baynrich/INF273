@@ -6,12 +6,13 @@ import random
 import numpy as np
 
 
-
+# Constants
 n = 25000
-n_operators = 4
-new_sol_score = 1
-improvement_score = 2
-best_score = 6
+N_OPERATORS = 4
+NEW_SOL_SCORE = 2
+NEW_IMPROVEMENT_SCORE = 1
+NEW_BEST_SCORE = 6
+DECAY_VALUE = 0.1
 
 
 def alns(init_sol, prob):
@@ -24,18 +25,16 @@ def alns(init_sol, prob):
     alpha = 0
 
     visited = np.array([])
-    operator_probabilities = np.array([1 / n_operators] * n_operators)
-    operator_scores = np.array([1] * n_operators)
-    operator_decay = np.ones((n_operators, 3))
+    operator_probabilities = np.array([1 / N_OPERATORS] * N_OPERATORS)
+    operator_scores = np.array([1] * N_OPERATORS)
+    operator_decay = np.ones((N_OPERATORS, 3))
+    opcounts = np.zeros(N_OPERATORS)
 
 
     feasibles = 0
     posdelts = 0
 
     n_since_last_better = 0
-    last_better_sol = init_sol
-
-
     
     for i in tqdm(range(n)):
         
@@ -44,36 +43,35 @@ def alns(init_sol, prob):
             alpha = np.power(0.1 / T, 1 / n)
 
         # If we get stuck on the same solution, jump into some new solution and try from there.
-        if n_since_last_better >= 100:
-            last_better_cost = cost_function(last_better_sol, prob)
-            best_sol = assign_all_retireds(init_sol, prob["n_vehicles"], prob["n_calls"])
-
+        if n_since_last_better >= 50:
+            best_sol = assign_retireds(init_sol, prob)
 
 
         operator, nbor = select_nbor_op(best_sol, prob, operator_probabilities)
+        opcounts[operator] += 1
         nbor_cost = cost_function(nbor, prob)
         delta_e = nbor_cost - best_sol_cost
 
         if feasibility_check(nbor, prob):
             if not nbor in visited:
-                operator_scores[operator] += (new_sol_score / operator_decay[operator, 0])
-                operator_decay[operator, 0] += 0.001
+                operator_scores[operator] += (NEW_SOL_SCORE / operator_decay[operator, 0])
+                operator_decay[operator, 0] += DECAY_VALUE
                 visited = np.append(visited, nbor)
 
             feasibles += 1
-            if delta_e > 0:
+            if delta_e < 0:
                 posdelts += 1
                 n_since_last_better = 0
                 best_sol = nbor
                 best_sol_cost = nbor_cost
-                operator_scores[operator] += (improvement_score / operator_decay[operator, 1])
-                operator_decay[operator, 1] += 0.001
+                operator_scores[operator] += (NEW_IMPROVEMENT_SCORE / operator_decay[operator, 1])
+                operator_decay[operator, 1] += 0.01
 
                 if best_sol_cost < global_best_cost:
                     global_best_cost = best_sol_cost
                     global_best_sol = best_sol
-                    operator_scores[operator] += (best_score /  operator_decay[operator, 2])
-                    operator_decay[operator, 2] += 0.001
+                    operator_scores[operator] += (NEW_BEST_SCORE /  operator_decay[operator, 2])
+                    operator_decay[operator, 2] += 0.01
 
             else:
                 n_since_last_better += 1
@@ -90,12 +88,13 @@ def alns(init_sol, prob):
             T = T * alpha
        
         # Update operator probabilities based on achieved scores.
-        if i % 100 == 0:
+        if i % 200 == 0:
             opsum = sum(operator_scores)
             for j in range(len(operator_probabilities)):
                 operator_probabilities[j] = operator_scores[j] / opsum
-            operator_scores = np.array([1] * n_operators)
-            operator_decay = np.ones((n_operators, 3))
+            operator_scores = np.array([1] * N_OPERATORS)
+            operator_decay = np.ones((N_OPERATORS, 3))
+    print("opcounts", opcounts)
 
     return global_best_sol, global_best_cost
 

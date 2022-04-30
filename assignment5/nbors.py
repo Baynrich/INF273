@@ -101,7 +101,7 @@ def assign_retireds(sol, prob):
     retireds = list(set(retireds))
     retireds = [(call, prob["Cargo"][call-1][3]) for call in retireds]
     retireds.sort(key = lambda tuple: tuple[1], reverse=True)
-    n_to_assign = 1 if len(retireds) < 2 else random.randint(1, len(retireds) - 1)
+    n_to_assign = 1 if len(retireds) < 2 else random.randint(1, int(np.sqrt(len(retireds) - 1)))
 
     for call in retireds[0:n_to_assign]:
         assigned_vehicle = random.randint(0, len(vehicles)-1)
@@ -151,3 +151,17 @@ def retire_calls(sol, prob):
     return sol
 
     
+def reassign_all(sol, prob):
+    all_calls = [i+1 for i in range(prob["n_calls"])]
+    r_sol = np.array([0 for i in range(prob["n_vehicles"])])
+    while(len(all_calls) > 0):
+        cur_call = all_calls.pop(random.choice(all_calls))
+        ZeroIndex = np.array(np.where(r_sol == 0)[0], dtype=int)
+
+        for index in ZeroIndex:
+            cand_sol = r_sol.copy()
+
+
+
+
+        pass
