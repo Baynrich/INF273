@@ -45,6 +45,7 @@ def alns(init_sol, prob):
         # If we get stuck on the same solution, jump into some new solution and try from there.
         if n_since_last_better >= 200:
             best_sol = reassign_all(init_sol, prob)
+            n_since_last_better = 0
 
 
         operator, nbor = select_nbor_op(best_sol, prob, operator_probabilities)
