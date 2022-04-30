@@ -7,8 +7,6 @@ import time
 
 probnames = ['./Call_7_Vehicle_3.txt', './Call_18_Vehicle_5.txt', './Call_35_Vehicle_7.txt', './Call_80_Vehicle_20.txt', './Call_130_Vehicle_40.txt', './Call_300_Vehicle_90.txt']
 
-
-
 def run_problem(probname):
     prob = load_problem(probname)
     init_sol = [0] * prob["n_vehicles"]
@@ -31,18 +29,15 @@ def run_problem(probname):
     average_cost = np.mean(best_costs)
     return best_best_sol, best_best_cost, average_cost, runtime, init_cost
 
-
-
 f = open("results.txt", "a")
 for probname in probnames:
 
     bsol, bcost, acost, rt, icost = run_problem(probname)
+    f = open("results.txt", "a")
     f.write(probname + "\n")
     f.write("Average cost: " + str(acost) + "\n")
     f.write("Best cost: " + str(acost) + "\n")
     f.write("Improvement%: " + str((icost-bcost)/icost) + "\n")
     f.write("Runtime: " + str(rt) + "\n")
     f.write("Solution: " + str(bsol) + "\n\n\n")
-
-f.close()
-
+    f.close()

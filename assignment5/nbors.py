@@ -59,7 +59,7 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
 
     # No vehicles can be reordered - reassign instead.
     if len(reorderables) < 1:
-        return reassign_call(sol, n_vehicles, n_calls)
+        return sol
 
     eidx = random.choice(reorderables)
     sidx = 0
@@ -77,8 +77,6 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
 
     
 def assign_retireds(sol, prob):
-    """ This operator is intended to move us far from our current solution in the solution space.
-        Moves many calls, where other operators move only one. """
     currentVehicle = []
     vehicles = []
     for call in sol:
@@ -94,7 +92,7 @@ def assign_retireds(sol, prob):
 
     # No retired calls to reassign -> reorder some vehicle call instead.
     if len(retireds) == 0:
-        return(reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"]))
+        return sol
 
 
     # Un-retire random amount of calls. Start by un-retiring calls with highest cost of not transporting.
@@ -126,7 +124,7 @@ def retire_calls(sol, prob):
     r_sol = list(set(sol[:ZeroIndex[-1]]))
     r_sol.remove(0)
     if len(r_sol) < 1:
-        return assign_retireds(sol, prob)
+        return sol
     costs = [[i, 0] for i in r_sol]
     vehicle = 0
     for i in range(len(sol)):
@@ -162,13 +160,13 @@ def reassign_all(sol, prob):
 
         for index in ZeroIndex:
             cand_sol = r_sol.copy()
-            np.insert(cand_sol, index, cur_call)
-            np.insert(cand_sol, index, cur_call)
+            cand_sol = np.insert(cand_sol, index, cur_call)
+            cand_sol = np.insert(cand_sol, index, cur_call)
             if(feasibility_check(cand_sol, prob)):
                 r_sol = cand_sol
                 inserted = True
                 break
         if not inserted:
-            np.append(r_sol, cur_call)
-            np.append(r_sol, cur_call)
+            r_sol = np.append(r_sol, cur_call)
+            r_sol = np.append(r_sol, cur_call)
     return r_sol

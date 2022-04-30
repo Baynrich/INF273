@@ -43,7 +43,7 @@ def alns(init_sol, prob):
             alpha = np.power(0.1 / T, 1 / n)
 
         # If we get stuck on the same solution, jump into some new solution and try from there.
-        if n_since_last_better >= 100:
+        if n_since_last_better >= 200:
             best_sol = reassign_all(init_sol, prob)
 
 
