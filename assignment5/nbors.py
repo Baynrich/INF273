@@ -5,42 +5,19 @@ from utils import cost_function, feasibility_check, handle_init_costs
 
 
 def reassign_call(sol, n_vehicles, n_calls, costs):
-    target_v = random.randint(0, n_vehicles)
-    target_c = random.randint(1, n_vehicles)
-    r_sol = np.copy(sol)
-    r_sol = r_sol[r_sol != target_c]
-
-    zctr = 0
-    sidx = -1
-    eidx = -1
-    for i in range(len(r_sol)):
-        if r_sol[i] == 0:
-            zctr += 1
-            if  target_v == 0:
-                sidx = 0
-                eidx = i
-                break
-            if zctr == n_vehicles and target_v == n_vehicles:
-                sidx = i+1
-                eidx = len(r_sol) - 1
-                break
-
-            if(target_v != n_vehicles):
-                if zctr == target_v:
-                    sidx = i + 1
-                    continue
-                if zctr == target_v + 1:
-                    eidx = i
-                    break
-
-    # Reinsert call  
+    # Reassigns call with currently highest associated cost and reassigns it to a new vehicle
+    actives = np.where(costs[1] == 0)[0]
+    if len(actives) < 1:
+        # No calls are active, return initial solution
+        return sol
+    actives.sort(key = lambda tuple: tuple[0], reverse=True)  
+    target_v = random.randint(0, n_vehicles - 1)
+    ZeroIndexes = np.array(np.where(sol == 0)[0], dtype=int)
+    sidx = 0 if target_v == 0 else ZeroIndexes[target_v - 1] + 1
+    eidx = ZeroIndexes[target_v]
     for i in range(2):
-        try:
-            insertpos = random.randint(sidx, eidx + i)
-            r_sol = np.insert(r_sol, insertpos, target_c)
-        # Edge case whenever retiring when all other calls are active
-        except:
-            r_sol = np.insert(r_sol, sidx, target_c)
+        insertpos = random.randint(sidx, eidx + i)
+        r_sol = np.insert(r_sol, insertpos, actives[0][2])
     return r_sol
 
 
