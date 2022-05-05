@@ -36,7 +36,7 @@ for probname in probnames:
     f = open("results.txt", "a")
     f.write(probname + "\n")
     f.write("Average cost: " + str(acost) + "\n")
-    f.write("Best cost: " + str(acost) + "\n")
+    f.write("Best cost: " + str(bcost) + "\n")
     f.write("Improvement%: " + str((icost-bcost)/icost) + "\n")
     f.write("Runtime: " + str(rt) + "\n")
     f.write("Solution: " + str(bsol) + "\n\n\n")

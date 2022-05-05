@@ -4,9 +4,8 @@ from utils import cost_function, feasibility_check
 from tqdm import tqdm
 import random
 import numpy as np
+import time
 
-
-# Constants
 n = 25000
 N_OPERATORS = 4
 NEW_SOL_SCORE = 2
@@ -14,8 +13,16 @@ NEW_IMPROVEMENT_SCORE = 1
 NEW_BEST_SCORE = 6
 DECAY_VALUE = 0.1
 
+def handle_set_T_alpha(delta_es):
+    T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
+    alpha = np.power(0.1 / T, 1 / n)
+    return T, alpha
+        
+
 
 def alns(init_sol, prob):
+    # Constants
+
     best_sol = init_sol
     best_sol_cost = cost_function(best_sol, prob)
     global_best_sol = init_sol
@@ -28,28 +35,36 @@ def alns(init_sol, prob):
     operator_probabilities = np.array([1 / N_OPERATORS] * N_OPERATORS)
     operator_scores = np.array([1] * N_OPERATORS)
     operator_decay = np.ones((N_OPERATORS, 3))
-    opcounts = np.zeros(N_OPERATORS)
+    opcounts = np.zeros(N_OPERATORS + 1)
+    optimes = np.zeros(N_OPERATORS + 1)
 
 
     feasibles = 0
     posdelts = 0
 
     n_since_last_better = 0
+    init_sol = reassign_all(init_sol, prob)
     
     for i in tqdm(range(n)):
         
         if i == 100:
-            T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
-            alpha = np.power(0.1 / T, 1 / n)
+            T, alpha = handle_set_T_alpha(delta_es)
 
         # If we get stuck on the same solution, jump into some new solution and try from there.
-        if n_since_last_better >= 200:
+        if n_since_last_better >= 25:
+            st = time.time()
             best_sol = reassign_all(init_sol, prob)
+            et = time.time()
+            opcounts[4] += 1
+            optimes[4] += (et-st)
+
             n_since_last_better = 0
 
-
+        st = time.time()
         operator, nbor = select_nbor_op(best_sol, prob, operator_probabilities)
+        et = time.time()
         opcounts[operator] += 1
+        optimes[operator] += (et-st)
         nbor_cost = cost_function(nbor, prob)
         delta_e = nbor_cost - best_sol_cost
 
@@ -95,7 +110,9 @@ def alns(init_sol, prob):
                 operator_probabilities[j] = operator_scores[j] / opsum
             operator_scores = np.array([1] * N_OPERATORS)
             operator_decay = np.ones((N_OPERATORS, 3))
+    print("n_since_last_better", n_since_last_better)
     print("opcounts", opcounts)
+    print("optimes", optimes)
 
     return global_best_sol, global_best_cost
 
