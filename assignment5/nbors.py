@@ -32,18 +32,15 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls, costs):
             continue
         if idx - ZeroIndex[i-1] < 4:
             continue
-        reorderables.append(idx)
+        reorderables.append([i, idx])
 
     # No vehicles can be reordered - reassign instead.
     if len(reorderables) < 1:
         return sol
 
-    eidx = random.choice(reorderables)
-    sidx = 0
-    for i in range(eidx):
-        if sol[eidx - (i+1)] == 0:
-            sidx = eidx - (i)
-            break
+    e = random.choice(reorderables)
+    eidx = e[0]
+    sidx = 0 if e[1] == 0 else reorderables[e[1] - 1][0]
 
     to_reorder = random.randint(sidx, eidx-1)
     to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
