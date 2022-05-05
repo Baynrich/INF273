@@ -1,4 +1,3 @@
-from math import sqrt
 from nbors import assign_retireds, reassign_call, reorder_vehicle_calls, retire_calls, reassign_all
 from utils import cost_function, feasibility_check 
 from tqdm import tqdm
@@ -17,12 +16,13 @@ def handle_set_T_alpha(delta_es):
     T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
     alpha = np.power(0.1 / T, 1 / n)
     return T, alpha
+
+
         
 
 
 def alns(init_sol, prob):
     # Constants
-
     best_sol = init_sol
     best_sol_cost = cost_function(best_sol, prob)
     global_best_sol = init_sol
@@ -43,7 +43,8 @@ def alns(init_sol, prob):
     posdelts = 0
 
     n_since_last_better = 0
-    init_sol = reassign_all(init_sol, prob)
+    init_sol, costs = reassign_all(init_sol, prob)
+    
     
     for i in tqdm(range(n)):
         
@@ -53,7 +54,7 @@ def alns(init_sol, prob):
         # If we get stuck on the same solution, jump into some new solution and try from there.
         if n_since_last_better >= 25:
             st = time.time()
-            best_sol = reassign_all(init_sol, prob)
+            best_sol, costs = reassign_all(init_sol, prob)
             et = time.time()
             opcounts[4] += 1
             optimes[4] += (et-st)
@@ -61,7 +62,7 @@ def alns(init_sol, prob):
             n_since_last_better = 0
 
         st = time.time()
-        operator, nbor = select_nbor_op(best_sol, prob, operator_probabilities)
+        operator, nbor, nbor_costs = select_nbor_op(best_sol, prob, operator_probabilities, costs)
         et = time.time()
         opcounts[operator] += 1
         optimes[operator] += (et-st)
@@ -76,6 +77,7 @@ def alns(init_sol, prob):
 
             feasibles += 1
             if delta_e < 0:
+                costs = nbor_costs
                 posdelts += 1
                 n_since_last_better = 0
                 best_sol = nbor
@@ -98,6 +100,7 @@ def alns(init_sol, prob):
                 threshold = 0.8 if i < 100 else np.exp(-delta_e / T)
 
                 if randval < threshold:
+                    costs = nbor_costs
                     best_sol_cost = nbor_cost
                     best_sol = nbor
         if i >= 100:
@@ -117,18 +120,18 @@ def alns(init_sol, prob):
     return global_best_sol, global_best_cost
 
 
-def select_nbor_op(sol, prob, operator_probabilities):
+def select_nbor_op(sol, prob, operator_probabilities, costs):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
-        nbor = reassign_call(sol, prob["n_vehicles"], prob["n_calls"])
+        nbor = reassign_call(sol, prob["n_vehicles"], prob["n_calls"], costs)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
-        nbor = reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"])
+        nbor = reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"], costs)
     elif choice >= operator_probabilities[1] and choice < (operator_probabilities[0] + operator_probabilities[1] + operator_probabilities[2] ):
         operator = 2
-        nbor = assign_retireds(sol, prob)
+        nbor = assign_retireds(sol, prob, costs)
     else:
         operator = 3
-        nbor = retire_calls(sol, prob)
+        nbor = retire_calls(sol, prob, costs)
     return operator, nbor

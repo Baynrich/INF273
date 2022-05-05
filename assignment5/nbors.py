@@ -1,10 +1,10 @@
 import random
 import numpy as np
-from utils import cost_function, feasibility_check
+from utils import cost_function, feasibility_check, handle_init_costs
 
 
 
-def reassign_call(sol, n_vehicles, n_calls):
+def reassign_call(sol, n_vehicles, n_calls, costs):
     target_v = random.randint(0, n_vehicles)
     target_c = random.randint(1, n_vehicles)
     r_sol = np.copy(sol)
@@ -45,7 +45,7 @@ def reassign_call(sol, n_vehicles, n_calls):
 
 
 
-def reorder_vehicle_calls(sol, n_vehicles, n_calls):
+def reorder_vehicle_calls(sol, n_vehicles, n_calls, costs):
     """ Reinsert a call within the schedule of a vehicle """
     # Do not allow selecting retired calls on this occasion
     ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
@@ -76,7 +76,7 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls):
     return sol
 
     
-def assign_retireds(sol, prob):
+def assign_retireds(sol, prob, costs):
     currentVehicle = []
     vehicles = []
     for call in sol:
@@ -119,33 +119,21 @@ def assign_retireds(sol, prob):
     return np.array(flattened)
             
 
-def retire_calls(sol, prob):
-    ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
-    r_sol = list(set(sol[:ZeroIndex[-1]]))
-    r_sol.remove(0)
-    if len(r_sol) < 1:
+def retire_calls(sol, prob, costs):
+    # TODO - make call selection a weighted probability instead of direct selection to avoid getting stuck.
+    # Filter calls currently not retired
+    actives = np.where(costs[1] == 0)[0]
+    if len(actives) < 1:
         return sol
-    costs = [[i, 0] for i in r_sol]
-    vehicle = 0
-    for i in range(len(sol)):
-        if not sol[i] in r_sol:
-            continue
-        if(sol[i] == 0):
-            vehicle += 1
-            continue
-        trialsol = [0] * vehicle + [sol[i], sol[i]] + [0] * (prob["n_vehicles"] - vehicle)
-        curcost = cost_function(trialsol, prob)
-        for j in range(len(costs)):
-            if costs[j][0] == sol[i]:
-                costs[j][1] = curcost
-                break
-    costs.sort(key = lambda tuple: tuple[1], reverse=True)    
-    n_to_retire = random.randint(1, min(3, len(r_sol)))
+    actives.sort(key = lambda tuple: tuple[0], reverse=True)  
+    # Starting with most expensive calls, retire.
+    n_to_retire = random.randint(1, min(3, len(actives)))
     for i in range(n_to_retire):
-        to_retire = costs[i][0]
-        sol = sol[sol != to_retire]
-        sol = np.append(sol, costs[i][0])
-        sol = np.append(sol, costs[i][0])
+        sol = np.where(sol != actives[i][2])
+        sol = np.append(sol, actives[i][2])
+        sol = np.append(sol, actives[i][2])
+        # Update costs array for retired call
+        costs[actives[i][2]] = prob["Cargo"][actives[i][2]+1][3]
     return sol
 
     
@@ -169,4 +157,5 @@ def reassign_all(sol, prob):
         if not inserted:
             r_sol = np.append(r_sol, cur_call)
             r_sol = np.append(r_sol, cur_call)
-    return r_sol
+    costs = handle_init_costs(r_sol, prob["n_calls"], prob)
+    return r_sol, costs
