@@ -77,46 +77,19 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls, costs):
 
     
 def assign_retireds(sol, prob, costs):
-    currentVehicle = []
-    vehicles = []
-    for call in sol:
-        if call == 0:
-            vehicles.append(currentVehicle)
-            currentVehicle = []
-        else:
-            currentVehicle.append(call)
-    vehicles.append(currentVehicle)
-
-    # Reassign all retired calls to vehicles.
-    retireds = vehicles.pop()
-
-    # No retired calls to reassign -> reorder some vehicle call instead.
-    if len(retireds) == 0:
-        return sol
-
-
-    # Un-retire random amount of calls. Start by un-retiring calls with highest cost of not transporting.
-    retireds = list(set(retireds))
-    retireds = [(call, prob["Cargo"][call-1][3]) for call in retireds]
-    retireds.sort(key = lambda tuple: tuple[1], reverse=True)
+    retireds = np.where(costs[1] == 1)[0]
+    retireds.sort(key = lambda tuple: tuple[0], reverse=True)
     n_to_assign = 1 if len(retireds) < 2 else random.randint(1, int(np.sqrt(len(retireds) - 1)))
-
-    for call in retireds[0:n_to_assign]:
-        assigned_vehicle = random.randint(0, len(vehicles)-1)
-        for i in range(2):
-            insert_pos = random.randint(0, len(vehicles[assigned_vehicle]))
-            vehicles[assigned_vehicle].insert(insert_pos, call[0])
-    
-
-    vehicles.append([call[0] for call in retireds[n_to_assign:]])
-    vehicles.append([call[0] for call in retireds[n_to_assign:]])
-    # Flatten
-    flattened = []
-    for i, vehicle in enumerate(vehicles):
-        flattened += vehicle
-        if (i < len(vehicles) - 2):
-            flattened += [0]
-    return np.array(flattened)
+    for i in range(n_to_assign):
+        sol = np.where(sol != retireds[i][2])
+        retiredIndex = np.array(np.where(sol == 0)[0], dtype=int)[-1]
+        insertIdx = random.randint(0, retiredIndex)
+        sol = np.insert(sol, insertIdx, retireds[i][2])
+        sol = np.insert(sol, insertIdx, retireds[i][2])
+        #Update inserted call's associated cost
+        updatedCostSol = np.where(sol != 0 or sol != retireds[i][2])[0]
+        costs[retireds[i][2]] = cost_function(updatedCostSol, prob)
+    return sol
             
 
 def retire_calls(sol, prob, costs):
