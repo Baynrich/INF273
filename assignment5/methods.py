@@ -124,14 +124,14 @@ def select_nbor_op(sol, prob, operator_probabilities, costs):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
-        nbor = reassign_call(sol, prob["n_vehicles"], prob["n_calls"], costs)
+        nbor, costs = reassign_call(sol, prob["n_vehicles"], costs)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
-        nbor = reorder_vehicle_calls(sol, prob["n_vehicles"], prob["n_calls"], costs)
+        nbor = reorder_vehicle_calls(sol)
     elif choice >= operator_probabilities[1] and choice < (operator_probabilities[0] + operator_probabilities[1] + operator_probabilities[2] ):
         operator = 2
-        nbor = assign_retireds(sol, prob, costs)
+        nbor, costs = assign_retireds(sol, prob, costs)
     else:
         operator = 3
-        nbor = retire_calls(sol, prob, costs)
-    return operator, nbor
+        nbor, costs = retire_calls(sol, prob, costs)
+    return operator, nbor, costs

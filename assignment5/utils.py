@@ -211,14 +211,14 @@ def cost_function(Solution, problem):
 
 
 def handle_init_costs(sol, n_vehicles, prob):
-    costs = np.array((n_vehicles, 3))
+    costs = np.zeros((n_vehicles, 3), dtype="float16")
     vidx = 0
     for i in range(len(sol)):
         if sol[i] == 0:
             vidx += 1
         else:
             cost = cost_function([0] * vidx + [sol[i]] + [0] * (n_vehicles - vidx), prob)
-            costs[i][0] = cost
-            costs[i][1] = 0 if vidx < (n_vehicles - 1) else 1
-            costs[i][2] = sol[i]
+            costs[sol[i]-1][0] = cost
+            costs[sol[i]-1][1] = 0 if vidx < (n_vehicles - 1) else 1
+            costs[sol[i]-1][2] = sol[i]
     return costs

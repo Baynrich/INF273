@@ -4,7 +4,7 @@ from utils import cost_function, feasibility_check, handle_init_costs
 
 
 
-def reassign_call(sol, n_vehicles, n_calls, costs):
+def reassign_call(sol, n_vehicles, costs):
     # Reassigns call with currently highest associated cost and reassigns it to a new vehicle
     actives = np.where(costs[1] == 0)[0]
     if len(actives) < 1:
@@ -22,7 +22,7 @@ def reassign_call(sol, n_vehicles, n_calls, costs):
 
 
 
-def reorder_vehicle_calls(sol, n_vehicles, n_calls, costs):
+def reorder_vehicle_calls(sol):
     """ Reinsert a call within the schedule of a vehicle """
     # Do not allow selecting retired calls on this occasion
     ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
@@ -33,15 +33,12 @@ def reorder_vehicle_calls(sol, n_vehicles, n_calls, costs):
         if idx - ZeroIndex[i-1] < 4:
             continue
         reorderables.append([i, idx])
-
-    # No vehicles can be reordered - reassign instead.
+    # No vehicles can be reordered - return original solution. 
     if len(reorderables) < 1:
         return sol
-
     e = random.choice(reorderables)
     eidx = e[0]
     sidx = 0 if e[1] == 0 else reorderables[e[1] - 1][0]
-
     to_reorder = random.randint(sidx, eidx-1)
     to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
     target = sol[to_target]
@@ -62,7 +59,8 @@ def assign_retireds(sol, prob, costs):
         sol = np.insert(sol, insertIdx, retireds[i][2])
         #Update inserted call's associated cost
         updatedCostSol = np.where(sol != 0 or sol != retireds[i][2])[0]
-        costs[retireds[i][2]] = cost_function(updatedCostSol, prob)
+        costs[retireds[i, 2]][0] = cost_function(updatedCostSol, prob)
+        costs[retireds[i, 2]][1] = 0
     return sol
             
 
@@ -80,7 +78,8 @@ def retire_calls(sol, prob, costs):
         sol = np.append(sol, actives[i][2])
         sol = np.append(sol, actives[i][2])
         # Update costs array for retired call
-        costs[actives[i][2]] = prob["Cargo"][actives[i][2]+1][3]
+        costs[actives[i][2]][0] = prob["Cargo"][actives[i][2]+1][3]
+        costs[actives[i][2]][1] = 1
     return sol
 
     
@@ -92,7 +91,6 @@ def reassign_all(sol, prob):
         all_calls.remove(cur_call)
         ZeroIndex = np.array(np.where(r_sol == 0)[0], dtype=int)
         inserted = False
-
         for index in ZeroIndex:
             cand_sol = r_sol.copy()
             cand_sol = np.insert(cand_sol, index, cur_call)
