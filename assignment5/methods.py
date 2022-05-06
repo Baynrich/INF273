@@ -43,10 +43,12 @@ def alns(init_sol, prob):
     posdelts = 0
 
     n_since_last_better = 0
-    init_sol, costs = reassign_all(init_sol, prob)
+    init_sol, costs = reassign_all(init_sol, prob)   
 
-    return
-    
+    nbor, costs = retire_calls(init_sol, prob, costs)
+    print(nbor)
+    print(costs)
+    return 
     
     for i in tqdm(range(n)):
         

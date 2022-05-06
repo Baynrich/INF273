@@ -6,7 +6,7 @@ from utils import cost_function, feasibility_check, handle_init_costs
 
 def reassign_call(sol, n_vehicles, costs, prob):
     # Reassigns call with currently highest associated cost and reassigns it to a new vehicle
-    actives = np.where(costs[1] == 0)[0]
+    actives = costs[costs[:, 1] == 0]
     if len(actives) < 1:
         # No calls are active, return initial solution
         return sol
@@ -53,7 +53,7 @@ def reorder_vehicle_calls(sol):
 
     
 def assign_retireds(sol, prob, costs):
-    retireds = np.where(costs[1] == 1)[0]
+    retireds = costs[costs[:, 1] == 1]
     if len(retireds) < 1:
         return sol, costs
 
@@ -76,10 +76,7 @@ def assign_retireds(sol, prob, costs):
 def retire_calls(sol, prob, costs):
     # TODO - make call selection a weighted probability instead of direct selection to avoid getting stuck.
     # Filter calls currently not retired
-    actives = costs[np.where(costs[1] == 0)[0]]
-    print(sol)
-    print(costs)
-    print(actives)
+    actives = costs[costs[:, 1] == 0]
     if len(actives) < 1:
         return sol
 
