@@ -12,7 +12,7 @@ def handle_set_T_alpha(delta_es, n):
     alpha = np.power(0.1 / T, 1 / n)
     return T, alpha
 
-def alns(init_sol, prob):
+def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
     n = 25000
     N_OPERATORS = 4
     NEW_SOL_SCORE = 2
@@ -22,7 +22,7 @@ def alns(init_sol, prob):
 
     # Constants
     best_sol = init_sol
-    best_sol_cost = cost_function(best_sol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
+    best_sol_cost = cost_function(best_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     global_best_sol = init_sol
     global_best_cost = best_sol_cost
     delta_es = np.array([1])
@@ -41,7 +41,7 @@ def alns(init_sol, prob):
     posdelts = 0
 
     n_since_last_better = 0
-    init_sol, costs = reassign_all(init_sol, prob)
+    init_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
     
     for i in tqdm(range(n)):
         
@@ -51,7 +51,7 @@ def alns(init_sol, prob):
         # If we get stuck on the same solution, jump into some new solution and try from there.
         if n_since_last_better >= 25:
             st = time.time()
-            best_sol, costs = reassign_all(init_sol, prob)
+            best_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
             et = time.time()
             opcounts[4] += 1
             optimes[4] += (et-st)
@@ -59,14 +59,14 @@ def alns(init_sol, prob):
             n_since_last_better = 0
 
         st = time.time()
-        operator, nbor, nbor_costs = select_nbor_op(best_sol, prob, operator_probabilities, costs)
+        operator, nbor, nbor_costs = select_nbor_op(best_sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
         et = time.time()
         opcounts[operator] += 1
         optimes[operator] += (et-st)
-        nbor_cost = cost_function(nbor, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
+        nbor_cost = cost_function(nbor, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
         delta_e = nbor_cost - best_sol_cost
 
-        if feasibility_check(nbor, prob["n_vehicles"], prob['Cargo'], prob['TravelTime'], prob['FirstTravelTime'], prob['VesselCapacity'], prob['LoadingTime'], prob['UnloadingTime'], prob['VesselCargo']):
+        if feasibility_check(nbor, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
             if not nbor in visited:
                 operator_scores[operator] += (NEW_SOL_SCORE / operator_decay[operator, 0])
                 operator_decay[operator, 0] += DECAY_VALUE
@@ -117,18 +117,18 @@ def alns(init_sol, prob):
     return global_best_sol, global_best_cost
 
 
-def select_nbor_op(sol, prob, operator_probabilities, costs):
+def select_nbor_op(sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
-        nbor, costs = reassign_call(sol, prob["n_vehicles"], costs, prob)
+        nbor, costs = reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
         nbor = reorder_vehicle_calls(sol)
     elif choice >= operator_probabilities[1] and choice < (operator_probabilities[0] + operator_probabilities[1] + operator_probabilities[2] ):
         operator = 2
-        nbor, costs = assign_retireds(sol, prob, costs)
+        nbor, costs = assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     else:
         operator = 3
-        nbor, costs = retire_calls(sol, prob, costs)
+        nbor, costs = retire_calls(sol, costs, Cargo)
     return operator, nbor, costs

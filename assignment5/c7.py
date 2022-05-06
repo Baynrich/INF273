@@ -8,18 +8,18 @@ import time
 probnames = ['./Call_7_Vehicle_3.txt', './Call_18_Vehicle_5.txt', './Call_35_Vehicle_7.txt', './Call_80_Vehicle_20.txt', './Call_130_Vehicle_40.txt', './Call_300_Vehicle_90.txt']
 
 def run_problem(probname):
-    prob = load_problem(probname)
-    init_sol = [0] * prob["n_vehicles"]
-    for i in range(prob["n_calls"]):
+    n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost = load_problem(probname)
+    init_sol = [0] * n_vehicles
+    for i in range(n_calls):
         init_sol += [(i+1), (i+1)]
     init_sol = np.array(init_sol)
-    init_cost = cost_function(init_sol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
+    init_cost = cost_function(init_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     best_best_sol = None
     best_best_cost = float('inf')
     best_costs = []
     st = time.time()
     for i in range(10):
-        best_sol, best_sol_cost = alns(init_sol, prob)
+        best_sol, best_sol_cost = alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
         best_costs.append(best_sol_cost)
         if(best_sol_cost < best_best_cost):
             best_best_sol = best_sol

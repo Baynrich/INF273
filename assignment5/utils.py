@@ -13,9 +13,9 @@ def load_problem(filename):
     E = []
     with open(filename) as f:
         lines = f.readlines()
-        num_nodes = int(lines[1])
+        n_nodes = int(lines[1])
         n_vehicles = int(lines[3])
-        num_calls = int(lines[n_vehicles + 5 + 1])
+        n_calls = int(lines[n_vehicles + 5 + 1])
 
         for i in range(n_vehicles):
             A.append(lines[1 + 4 + i].split(','))
@@ -23,49 +23,49 @@ def load_problem(filename):
         for i in range(n_vehicles):
             B.append(lines[1 + 7 + n_vehicles + i].split(','))
 
-        for i in range(num_calls):
+        for i in range(n_calls):
             C.append(lines[1 + 8 + n_vehicles * 2 + i].split(','))
 
-        for j in range(num_nodes * num_nodes * n_vehicles):
-            D.append(lines[1 + 2 * n_vehicles + num_calls + 9 + j].split(','))
+        for j in range(n_nodes * n_nodes * n_vehicles):
+            D.append(lines[1 + 2 * n_vehicles + n_calls + 9 + j].split(','))
 
-        for i in range(n_vehicles * num_calls):
-            E.append(lines[1 + 1 + 2 * n_vehicles + num_calls + 10 + j + i].split(','))
+        for i in range(n_vehicles * n_calls):
+            E.append(lines[1 + 1 + 2 * n_vehicles + n_calls + 10 + j + i].split(','))
         f.close()
 
     Cargo = np.array(C, dtype=np.double)[:, 1:]
     D = np.array(D, dtype=np.int)
 
-    TravelTime = np.zeros((n_vehicles + 1, num_nodes + 1, num_nodes + 1))
-    TravelCost = np.zeros((n_vehicles + 1, num_nodes + 1, num_nodes + 1))
+    TravelTime = np.zeros((n_vehicles + 1, n_nodes + 1, n_nodes + 1))
+    TravelCost = np.zeros((n_vehicles + 1, n_nodes + 1, n_nodes + 1))
     for j in range(len(D)):
         TravelTime[D[j, 0]][D[j, 1], D[j, 2]] = D[j, 3]
         TravelCost[D[j, 0]][D[j, 1], D[j, 2]] = D[j, 4]
 
     VesselCapacity = np.zeros(n_vehicles)
     StartingTime = np.zeros(n_vehicles)
-    FirstTravelTime = np.zeros((n_vehicles, num_nodes))
-    FirstTravelCost = np.zeros((n_vehicles, num_nodes))
+    FirstTravelTime = np.zeros((n_vehicles, n_nodes))
+    FirstTravelCost = np.zeros((n_vehicles, n_nodes))
     A = np.array(A, dtype=np.int)
     for i in range(n_vehicles):
         VesselCapacity[i] = A[i, 3]
         StartingTime[i] = A[i, 2]
-        for j in range(num_nodes):
+        for j in range(n_nodes):
             FirstTravelTime[i, j] = TravelTime[i + 1, A[i, 1], j + 1] + A[i, 2]
             FirstTravelCost[i, j] = TravelCost[i + 1, A[i, 1], j + 1]
     TravelTime = TravelTime[1:, 1:, 1:]
     TravelCost = TravelCost[1:, 1:, 1:]
-    VesselCargo = np.zeros((n_vehicles, num_calls + 1))
+    VesselCargo = np.zeros((n_vehicles, n_calls + 1))
     B = np.array(B, dtype=object)
     for i in range(n_vehicles):
         VesselCargo[i, np.array(B[i][1:], dtype=np.int)] = 1
     VesselCargo = VesselCargo[:, 1:]
 
-    LoadingTime = np.zeros((n_vehicles + 1, num_calls + 1))
-    UnloadingTime = np.zeros((n_vehicles + 1, num_calls + 1))
-    PortCost = np.zeros((n_vehicles + 1, num_calls + 1))
+    LoadingTime = np.zeros((n_vehicles + 1, n_calls + 1))
+    UnloadingTime = np.zeros((n_vehicles + 1, n_calls + 1))
+    PortCost = np.zeros((n_vehicles + 1, n_calls + 1))
     E = np.array(E, dtype=np.int)
-    for i in range(n_vehicles * num_calls):
+    for i in range(n_vehicles * n_calls):
         LoadingTime[E[i, 0], E[i, 1]] = E[i, 2]
         UnloadingTime[E[i, 0], E[i, 1]] = E[i, 4]
         PortCost[E[i, 0], E[i, 1]] = E[i, 5] + E[i, 3]
@@ -73,22 +73,8 @@ def load_problem(filename):
     LoadingTime = LoadingTime[1:, 1:]
     UnloadingTime = UnloadingTime[1:, 1:]
     PortCost = PortCost[1:, 1:]
-    output = {
-        'n_nodes': num_nodes,
-        'n_vehicles': n_vehicles,
-        'n_calls': num_calls,
-        'Cargo': Cargo,
-        'TravelTime': TravelTime,
-        'FirstTravelTime': FirstTravelTime,
-        'VesselCapacity': VesselCapacity,
-        'LoadingTime': LoadingTime,
-        'UnloadingTime': UnloadingTime,
-        'VesselCargo': VesselCargo,
-        'TravelCost': TravelCost,
-        'FirstTravelCost': FirstTravelCost,
-        'PortCost': PortCost
-    }
-    return output
+    return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
+
 
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
@@ -196,15 +182,15 @@ def cost_function(Solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
     return TotalCost
 
 
-def handle_init_costs(sol, n_vehicles, prob):
-    costs = np.zeros((prob["n_calls"], 3), dtype="float64")
+def handle_init_costs(sol, n_vehicles, n_calls, Cargo, TravelCost, FirstTravelCost, PortCost):
+    costs = np.zeros((n_calls, 3), dtype="float64")
     vidx = 0
     for i in range(len(sol)):
         if sol[i] == 0:
             vidx += 1
         else:
             cand_sol = [0] * vidx + [sol[i]] * 2 + [0] * (n_vehicles - vidx)
-            cost = cost_function(cand_sol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
+            cost = cost_function(cand_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
             costs[sol[i]-1, 0] = cost
             costs[sol[i]-1, 1] = 0 if vidx < (n_vehicles) else 1
             costs[sol[i]-1, 2] = sol[i]
