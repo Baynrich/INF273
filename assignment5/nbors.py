@@ -21,7 +21,7 @@ def reassign_call(sol, n_vehicles, costs, prob):
         sol = np.insert(sol, insertpos, int(actives[0, 2]))
         # Update inserted call's associated cost
     updatedCostSol = sol[np.logical_or(sol != 0, sol != actives[0, 2])]
-    costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, prob)        
+    costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
     return sol, costs
 
 
@@ -68,7 +68,7 @@ def assign_retireds(sol, prob, costs):
         
         # Update inserted call's associated cost
         updatedCostSol = sol[np.logical_or(sol != 0, sol != retireds[i, 2])]
-        costs[int(retireds[i, 2] - 1)][0] = cost_function(updatedCostSol, prob)
+        costs[int(retireds[i, 2] - 1)][0] = cost_function(updatedCostSol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
         costs[int(retireds[i, 2] - 1)][1] = 0
     return sol, costs
             
@@ -105,7 +105,7 @@ def reassign_all(sol, prob):
             cand_sol = r_sol.copy()
             cand_sol = np.insert(cand_sol, index, cur_call)
             cand_sol = np.insert(cand_sol, index, cur_call)
-            if(feasibility_check(cand_sol, prob)):
+            if(feasibility_check(cand_sol, prob["n_vehicles"], prob['Cargo'], prob['TravelTime'], prob['FirstTravelTime'], prob['VesselCapacity'], prob['LoadingTime'], prob['UnloadingTime'], prob['VesselCargo'])):
                 r_sol = cand_sol
                 inserted = True
                 break

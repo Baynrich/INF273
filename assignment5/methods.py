@@ -5,26 +5,24 @@ import random
 import numpy as np
 import time
 
-n = 25000
-N_OPERATORS = 4
-NEW_SOL_SCORE = 2
-NEW_IMPROVEMENT_SCORE = 1
-NEW_BEST_SCORE = 6
-DECAY_VALUE = 0.1
 
-def handle_set_T_alpha(delta_es):
+
+def handle_set_T_alpha(delta_es, n):
     T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
     alpha = np.power(0.1 / T, 1 / n)
     return T, alpha
 
-
-        
-
-
 def alns(init_sol, prob):
+    n = 25000
+    N_OPERATORS = 4
+    NEW_SOL_SCORE = 2
+    NEW_IMPROVEMENT_SCORE = 1
+    NEW_BEST_SCORE = 6
+    DECAY_VALUE = 0.1
+
     # Constants
     best_sol = init_sol
-    best_sol_cost = cost_function(best_sol, prob)
+    best_sol_cost = cost_function(best_sol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
     global_best_sol = init_sol
     global_best_cost = best_sol_cost
     delta_es = np.array([1])
@@ -48,7 +46,7 @@ def alns(init_sol, prob):
     for i in tqdm(range(n)):
         
         if i == 100:
-            T, alpha = handle_set_T_alpha(delta_es)
+            T, alpha = handle_set_T_alpha(delta_es, n)
 
         # If we get stuck on the same solution, jump into some new solution and try from there.
         if n_since_last_better >= 25:
@@ -65,10 +63,10 @@ def alns(init_sol, prob):
         et = time.time()
         opcounts[operator] += 1
         optimes[operator] += (et-st)
-        nbor_cost = cost_function(nbor, prob)
+        nbor_cost = cost_function(nbor, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
         delta_e = nbor_cost - best_sol_cost
 
-        if feasibility_check(nbor, prob):
+        if feasibility_check(nbor, prob["n_vehicles"], prob['Cargo'], prob['TravelTime'], prob['FirstTravelTime'], prob['VesselCapacity'], prob['LoadingTime'], prob['UnloadingTime'], prob['VesselCargo']):
             if not nbor in visited:
                 operator_scores[operator] += (NEW_SOL_SCORE / operator_decay[operator, 0])
                 operator_decay[operator, 0] += DECAY_VALUE

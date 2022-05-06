@@ -2,7 +2,7 @@ from operator import indexOf
 from utils import *
 from nbors import *
 from methods import *
-from utils import cost_function, feasibility_check 
+from utils import cost_function
 import time
 
 probnames = ['./Call_7_Vehicle_3.txt', './Call_18_Vehicle_5.txt', './Call_35_Vehicle_7.txt', './Call_80_Vehicle_20.txt', './Call_130_Vehicle_40.txt', './Call_300_Vehicle_90.txt']
@@ -13,7 +13,7 @@ def run_problem(probname):
     for i in range(prob["n_calls"]):
         init_sol += [(i+1), (i+1)]
     init_sol = np.array(init_sol)
-    init_cost = cost_function(init_sol, prob)
+    init_cost = cost_function(init_sol, prob["n_vehicles"], prob["Cargo"], prob["TravelCost"], prob["FirstTravelCost"], prob["PortCost"])
     best_best_sol = None
     best_best_cost = float('inf')
     best_costs = []
