@@ -10,10 +10,8 @@ def reassign_call(sol, n_vehicles, costs, prob):
     if len(actives) < 1:
         # No calls are active, return initial solution
         return sol, costs
-
     actives = actives[np.argsort(actives[:, 0])][::-1]
     sol = sol[sol != actives[0, 2]]
-
     target_v = random.randint(0, n_vehicles - 1)
     ZeroIndexes = np.array(np.where(sol == 0)[0], dtype=int)
     sidx = 0 if target_v == 0 else ZeroIndexes[target_v - 1] + 1
@@ -40,13 +38,12 @@ def reorder_vehicle_calls(sol):
             continue
         reorderables.append([i, idx])
     # No vehicles can be reordered - return original solution. 
-    print(sol)
-    print(reorderables)
+    
     if len(reorderables) < 1:
         return sol
     e = random.choice(reorderables)
-    eidx = e[0]
-    sidx = 0 if e[1] == 0 else reorderables[e[1] - 1][0]
+    eidx = e[1]
+    sidx = 0 if e[0] == 0 else ZeroIndex[e[0]-1] + 1
     to_reorder = random.randint(sidx, eidx-1)
     to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
     target = sol[to_target]
