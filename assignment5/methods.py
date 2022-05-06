@@ -44,6 +44,8 @@ def alns(init_sol, prob):
 
     n_since_last_better = 0
     init_sol, costs = reassign_all(init_sol, prob)
+
+    return
     
     
     for i in tqdm(range(n)):
@@ -124,7 +126,7 @@ def select_nbor_op(sol, prob, operator_probabilities, costs):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
-        nbor, costs = reassign_call(sol, prob["n_vehicles"], costs)
+        nbor, costs = reassign_call(sol, prob["n_vehicles"], costs, prob)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
         nbor = reorder_vehicle_calls(sol)
