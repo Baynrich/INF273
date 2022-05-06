@@ -45,7 +45,7 @@ def alns(init_sol, prob):
     n_since_last_better = 0
     init_sol, costs = reassign_all(init_sol, prob)   
 
-    nbor, costs = retire_calls(init_sol, prob, costs)
+    nbor, costs = reassign_call(init_sol, prob["n_vehicles"], costs, prob)
     print(nbor)
     print(costs)
     return 

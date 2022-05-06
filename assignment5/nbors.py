@@ -12,17 +12,18 @@ def reassign_call(sol, n_vehicles, costs, prob):
         return sol
 
     actives = actives[np.argsort(actives[:, 0])][::-1]
+    sol = sol[sol != actives[0, 2]]
+
     target_v = random.randint(0, n_vehicles - 1)
     ZeroIndexes = np.array(np.where(sol == 0)[0], dtype=int)
     sidx = 0 if target_v == 0 else ZeroIndexes[target_v - 1] + 1
     eidx = ZeroIndexes[target_v]
-    sol = np.array(np.where(sol != actives[0][2]))
     for i in range(2):
         insertpos = random.randint(sidx, eidx + i)
         sol = np.insert(sol, insertpos, actives[0][2])
         # Update inserted call's associated cost
-        updatedCostSol = np.where(sol != 0 or sol != actives[i][2])[0]
-        costs[actives[i, 2]][0] = cost_function(updatedCostSol, prob)        
+        updatedCostSol = sol[np.logical_or(sol != 0, sol != actives[i, 2])]
+        costs[int(actives[i, 2] - 1)][0] = cost_function(updatedCostSol, prob)        
     return sol, costs
 
 
@@ -60,16 +61,16 @@ def assign_retireds(sol, prob, costs):
     retireds = retireds[np.argsort(retireds[:, 0])][::-1]
     n_to_assign = 1 if len(retireds) < 2 else random.randint(1, int(np.sqrt(len(retireds) - 1)))
     for i in range(n_to_assign):
-        sol = np.where(sol != retireds[i][2])
+        sol = sol[sol != retireds[i, 2]]
         retiredIndex = np.array(np.where(sol == 0)[0], dtype=int)[-1]
         insertIdx = random.randint(0, retiredIndex)
         sol = np.insert(sol, insertIdx, retireds[i][2])
         sol = np.insert(sol, insertIdx, retireds[i][2])
         
         # Update inserted call's associated cost
-        updatedCostSol = np.where(sol != 0 or sol != retireds[i][2])[0]
-        costs[retireds[i, 2]][0] = cost_function(updatedCostSol, prob)
-        costs[retireds[i, 2]][1] = 0
+        updatedCostSol = sol[sol != 0 or sol != retireds[i, 2]]
+        costs[int(retireds[i, 2] - 1)][0] = cost_function(updatedCostSol, prob)
+        costs[int(retireds[i, 2] - 1)][1] = 0
     return sol, costs
             
 
@@ -84,13 +85,13 @@ def retire_calls(sol, prob, costs):
     # Starting with most expensive calls, retire.
     n_to_retire = random.randint(1, min(3, len(actives)))
     for i in range(n_to_retire):
-        sol = np.where(sol != actives[i][2])
+        sol = sol[sol != actives[i, 2]]
         sol = np.append(sol, actives[i][2])
         sol = np.append(sol, actives[i][2])
         # Update retired call's associated cost
-        costs[actives[i][2]][0] = prob["Cargo"][actives[i][2]+1][3]
-        costs[actives[i][2]][1] = 1
-    return sol
+        costs[int(actives[i, 2] - 1)][0] = prob["Cargo"][int(actives[i, 2] - 1)][3]
+        costs[int(actives[i, 2] - 1)][1] = 1
+    return sol, costs
 
     
 def reassign_all(sol, prob):
