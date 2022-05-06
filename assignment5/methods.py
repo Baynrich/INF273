@@ -43,12 +43,7 @@ def alns(init_sol, prob):
     posdelts = 0
 
     n_since_last_better = 0
-    init_sol, costs = reassign_all(init_sol, prob)   
-
-    nbor, costs = reassign_call(init_sol, prob["n_vehicles"], costs, prob)
-    print(nbor)
-    print(costs)
-    return 
+    init_sol, costs = reassign_all(init_sol, prob)
     
     for i in tqdm(range(n)):
         
