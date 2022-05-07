@@ -146,7 +146,7 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
 
             ArriveTime = np.zeros(NoDoubleCallOnVehicle)
             for j in range(NoDoubleCallOnVehicle):
-                ArriveTime[j] = np.max((currentTime + RouteTravelTime[j], Timewindows[0, j]))
+                ArriveTime[j] = max(currentTime + RouteTravelTime[j], Timewindows[0, j])
                 if ArriveTime[j] > Timewindows[1, j]:
                     feasibility = False
                     break
