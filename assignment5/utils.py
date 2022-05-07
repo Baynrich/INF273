@@ -132,8 +132,14 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
             PortIndex[::2] = Cargo[sortRout[::2], 0]
             PortIndex = PortIndex[Indx] - 1
 
-            LU_Time = UnloadingTime[i, sortRout]
-            LU_Time[::2] = LoadingTime[i, sortRout[::2]]
+
+            LU_Time = np.zeros(sortRout.size)
+            for j in range(len(LU_Time)):
+                if np.mod(j, 2) == 0:
+                    LU_Time[j] = LoadingTime[i, sortRout[j]]
+                else:
+                    LU_Time[j] = UnloadingTime[i, sortRout[j]]
+            
             LU_Time = LU_Time[Indx]
             Diag = TravelTime[i, PortIndex[:-1], PortIndex[1:]]
             FirstVisitTime = FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]
