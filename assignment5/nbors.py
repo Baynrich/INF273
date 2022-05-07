@@ -13,7 +13,9 @@ def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, Po
     actives = actives[np.argsort(actives[:, 0])][::-1]
     sol = sol[sol != actives[0, 2]]
     target_v = random.randint(0, n_vehicles - 1)
-    ZeroIndexes = np.array(np.where(sol == 0)[0], dtype=int)
+
+    ZeroIndexes = np.where(sol == 0)[0]
+    ZeroIndexes = ZeroIndexes.astype('int64')
     sidx = 0 if target_v == 0 else ZeroIndexes[target_v - 1] + 1
     eidx = ZeroIndexes[target_v]
     for i in range(2):
@@ -24,10 +26,14 @@ def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, Po
     costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     return sol, costs
 
+@jit(nopython=True)
 def reorder_vehicle_calls(sol):
     """ Reinsert a call within the schedule of a vehicle """
     # Do not allow selecting retired calls on this occasion
-    ZeroIndex = np.array(np.where(sol == 0)[0], dtype=int)
+    ZeroIndex = np.where(sol == 0)[0]
+    ZeroIndex = ZeroIndex.astype('int64')
+
+
     reorderables = []
     for i, idx in enumerate(ZeroIndex):
         if i == 0 and idx < 4:
@@ -39,11 +45,13 @@ def reorder_vehicle_calls(sol):
     
     if len(reorderables) < 1:
         return sol
-    e = random.choice(reorderables)
+    reorderables = np.array(reorderables)
+    e = np.random.randint(len(reorderables))
+    e = reorderables[e]
     eidx = e[1]
     sidx = 0 if e[0] == 0 else ZeroIndex[e[0]-1] + 1
-    to_reorder = random.randint(sidx, eidx-1)
-    to_target = random.choice([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]])
+    to_reorder = np.random.randint(sidx, eidx)
+    to_target = np.random.choice(np.array([sidx + i for i in range(eidx-sidx) if sol[sidx + i] != sol[to_reorder]]))
     target = sol[to_target]
     sol[to_target] = sol[to_reorder]
     sol[to_reorder] = target
@@ -69,7 +77,6 @@ def assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, 
         afters = sol[insertIdx:]
         sol = np.concatenate((befores, np.array([int(retireds[i, 2]), int(retireds[i, 2])])))
         sol = np.concatenate((sol, afters))
-        
         # Update inserted call's associated cost
         updatedCostSol = sol[np.logical_or(sol != 0, sol != retireds[i, 2])]
         costs[int(retireds[i, 2] - 1)][0] = cost_function(updatedCostSol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
