@@ -89,18 +89,25 @@ def retire_calls(sol, costs, Cargo):
         costs[int(actives[i, 2] - 1)][1] = 1
     return sol, costs
 
+@jit(nopython=True)
 def reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
-    all_calls = [i+1 for i in range(n_calls)]
+    all_calls = np.array([i+1 for i in range(n_calls)])
     r_sol = np.array([0 for i in range(n_vehicles)])
     while(len(all_calls) > 0):
-        cur_call = random.choice(all_calls)
-        all_calls.remove(cur_call)
-        ZeroIndex = np.array(np.where(r_sol == 0)[0], dtype=int)
+        cur_call = np.random.choice(all_calls)
+        all_calls = all_calls[all_calls != cur_call]
+
+        ZeroIndex = np.where(r_sol == 0)[0]
+        ZeroIndex = ZeroIndex.astype('int64')
+
         inserted = False
         for index in ZeroIndex:
             cand_sol = r_sol.copy()
-            cand_sol = np.insert(cand_sol, index, cur_call)
-            cand_sol = np.insert(cand_sol, index, cur_call)
+
+            befores = cand_sol[:index]
+            afters = cand_sol[index:]
+            cand_sol = np.concatenate((befores, np.array([cur_call, cur_call])))
+            cand_sol = np.concatenate((cand_sol, afters))
             if(feasibility_check(cand_sol, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)):
                 r_sol = cand_sol
                 inserted = True

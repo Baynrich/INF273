@@ -42,7 +42,6 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
 
     n_since_last_better = 0
     init_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
-    
     for i in tqdm(range(n)):
         
         if i == 100:
