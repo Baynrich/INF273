@@ -204,6 +204,7 @@ def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
     return TotalCost
 
+@jit(nopython=True)
 def handle_init_costs(sol, n_vehicles, n_calls, Cargo, TravelCost, FirstTravelCost, PortCost):
     costs = np.zeros((n_calls, 3), dtype="float64")
     vidx = 0
