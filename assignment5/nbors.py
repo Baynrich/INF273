@@ -49,6 +49,7 @@ def reorder_vehicle_calls(sol):
     sol[to_reorder] = target
     return sol
 
+@jit(nopython=True)
 def assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     retireds = costs[costs[:, 1] == 1]
     if len(retireds) < 1:
@@ -58,10 +59,16 @@ def assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, 
     n_to_assign = 1 if len(retireds) < 2 else random.randint(1, int(np.sqrt(len(retireds) - 1)))
     for i in range(n_to_assign):
         sol = sol[sol != retireds[i, 2]]
-        retiredIndex = np.array(np.where(sol == 0)[0], dtype=int)[-1]
+
+        retiredIndex = np.where(sol == 0)[0]
+        retiredIndex = retiredIndex.astype('int64')
+        retiredIndex = retiredIndex[-1]
+
         insertIdx = random.randint(0, retiredIndex)
-        sol = np.insert(sol, insertIdx, int(retireds[i][2]))
-        sol = np.insert(sol, insertIdx, int(retireds[i][2]))
+        befores = sol[:insertIdx]
+        afters = sol[insertIdx:]
+        sol = np.concatenate((befores, np.array([int(retireds[i, 2]), int(retireds[i, 2])])))
+        sol = np.concatenate((sol, afters))
         
         # Update inserted call's associated cost
         updatedCostSol = sol[np.logical_or(sol != 0, sol != retireds[i, 2])]
