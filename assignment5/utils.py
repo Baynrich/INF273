@@ -76,7 +76,7 @@ def load_problem(filename):
     PortCost = PortCost[1:, 1:]
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
-#@jit(nopython=True)
+@jit(nopython=True)
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
     :rtype: tuple
@@ -102,47 +102,53 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
                 allcand[j] = VesselCargo[i, currentv]
 
             if not np.all(allcand):
-                feasibility = False
-                break
-            else:
-                LoadSize = 0
-                currentTime = 0
-                sortRout = np.sort(currentVPlan)
-                I = np.argsort(currentVPlan, kind='quicksort')
-                Indx = np.argsort(I, kind='quicksort')
-                LoadSize -= Cargo[sortRout, 2]
-                LoadSize[::2] = Cargo[sortRout[::2], 2]
-                LoadSize = LoadSize[Indx]
-                if np.any(VesselCapacity[i] - np.cumsum(LoadSize) < 0):
+                return False
+            
+
+            
+
+            currentTime = 0
+            sortRout = np.sort(currentVPlan)
+            I = np.argsort(currentVPlan, kind='quicksort')
+            Indx = np.argsort(I, kind='quicksort')
+
+            LoadSize = np.zeros(sortRout.size)
+            for j in range(len(sortRout)):
+                LoadSize[j] = (-1) * Cargo[j, 2]
+
+            for j in range(int(len(LoadSize) / 2)):
+                LoadSize[j*2] = abs(LoadSize[j*2])
+            LoadSize = LoadSize[Indx]
+            if np.any(VesselCapacity[i] - np.cumsum(LoadSize) < 0):
+                return False
+
+            Timewindows = np.zeros((2, NoDoubleCallOnVehicle))
+            Timewindows[0] = Cargo[sortRout, 6]
+            Timewindows[0, ::2] = Cargo[sortRout[::2], 4]
+            Timewindows[1] = Cargo[sortRout, 7]
+            Timewindows[1, ::2] = Cargo[sortRout[::2], 5]
+
+            Timewindows = Timewindows[:, Indx]
+
+            PortIndex = Cargo[sortRout, 1].astype(int)
+            PortIndex[::2] = Cargo[sortRout[::2], 0]
+            PortIndex = PortIndex[Indx] - 1
+
+            LU_Time = UnloadingTime[i, sortRout]
+            LU_Time[::2] = LoadingTime[i, sortRout[::2]]
+            LU_Time = LU_Time[Indx]
+            Diag = TravelTime[i, PortIndex[:-1], PortIndex[1:]]
+            FirstVisitTime = FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]
+
+            RouteTravelTime = np.hstack((FirstVisitTime, Diag.flatten()))
+
+            ArriveTime = np.zeros(NoDoubleCallOnVehicle)
+            for j in range(NoDoubleCallOnVehicle):
+                ArriveTime[j] = np.max((currentTime + RouteTravelTime[j], Timewindows[0, j]))
+                if ArriveTime[j] > Timewindows[1, j]:
                     feasibility = False
                     break
-                Timewindows = np.zeros((2, NoDoubleCallOnVehicle))
-                Timewindows[0] = Cargo[sortRout, 6]
-                Timewindows[0, ::2] = Cargo[sortRout[::2], 4]
-                Timewindows[1] = Cargo[sortRout, 7]
-                Timewindows[1, ::2] = Cargo[sortRout[::2], 5]
-
-                Timewindows = Timewindows[:, Indx]
-
-                PortIndex = Cargo[sortRout, 1].astype(int)
-                PortIndex[::2] = Cargo[sortRout[::2], 0]
-                PortIndex = PortIndex[Indx] - 1
-
-                LU_Time = UnloadingTime[i, sortRout]
-                LU_Time[::2] = LoadingTime[i, sortRout[::2]]
-                LU_Time = LU_Time[Indx]
-                Diag = TravelTime[i, PortIndex[:-1], PortIndex[1:]]
-                FirstVisitTime = FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]
-
-                RouteTravelTime = np.hstack((FirstVisitTime, Diag.flatten()))
-
-                ArriveTime = np.zeros(NoDoubleCallOnVehicle)
-                for j in range(NoDoubleCallOnVehicle):
-                    ArriveTime[j] = np.max((currentTime + RouteTravelTime[j], Timewindows[0, j]))
-                    if ArriveTime[j] > Timewindows[1, j]:
-                        feasibility = False
-                        break
-                    currentTime = ArriveTime[j] + LU_Time[j]
+                currentTime = ArriveTime[j] + LU_Time[j]
 
     return feasibility
 
