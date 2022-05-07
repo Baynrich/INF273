@@ -194,8 +194,12 @@ def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
                 FirstVisitCost = np.atleast_1d(np.array(FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]))
                 IndividualRouteTravelCost = np.concatenate((FirstVisitCost, Diag))
                 RouteTravelCost[i] = np.sum(IndividualRouteTravelCost)
-                
-                CostInPorts[i] = np.sum(PortCost[i, currentVPlan]) / 2
+
+                insert_elem = np.zeros(currentVPlan.size)
+                for j in range(len(currentVPlan)):
+                    insert_elem[j] = PortCost[i, currentVPlan[j]]
+
+                CostInPorts[i] = np.sum(insert_elem) / 2
 
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
     return TotalCost
