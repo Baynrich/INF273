@@ -84,7 +84,6 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
     :param problem: The pickup and delivery problem object
     :return: whether the problem is feasible and the reason for probable infeasibility
     """
-
     solution = np.append(solution, [0])
     ZeroIndex = np.where(solution == 0)[0]
     ZeroIndex = ZeroIndex.astype('int64')
@@ -104,7 +103,6 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
             if not np.all(allcand):
                 return False
             
-            currentTime = 0
             sortRout = np.sort(currentVPlan)
             I = np.argsort(currentVPlan, kind='quicksort')
             Indx = np.argsort(I, kind='quicksort')
@@ -143,20 +141,21 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
                 Diag[j] = TravelTime[i, PortIndex[j], PortIndex[j+1]]
             FirstVisitTime = np.atleast_1d(np.array(FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]))
             RouteTravelTime = np.concatenate((FirstVisitTime, Diag))
-
             ArriveTime = np.zeros(NoDoubleCallOnVehicle)
+
+            currentTime = 0
             for j in range(NoDoubleCallOnVehicle):
                 ArriveTime[j] = max(currentTime + RouteTravelTime[j], Timewindows[0, j])
                 if ArriveTime[j] > Timewindows[1, j]:
-                    feasibility = False
-                    break
+                    return False
                 currentTime = ArriveTime[j] + LU_Time[j]
 
     return feasibility
 
-def cost_function(Solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
+@jit(nopython=True)
+def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     """
-    :param Solution: the proposed solution for the order of calls in each vehicle
+    :param solution: the proposed solution for the order of calls in each vehicle
     :return:
     """
 
@@ -164,12 +163,13 @@ def cost_function(Solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
     RouteTravelCost = np.zeros(n_vehicles)
     CostInPorts = np.zeros(n_vehicles)
 
-    Solution = np.append(Solution, [0])
-    ZeroIndex = np.array(np.where(Solution == 0)[0], dtype=int)
+    solution = np.append(solution, [0])
+    ZeroIndex = np.where(solution == 0)[0]
+    ZeroIndex = ZeroIndex.astype('int64')
     tempidx = 0
 
     for i in range(n_vehicles + 1):
-        currentVPlan = Solution[tempidx:ZeroIndex[i]]
+        currentVPlan = solution[tempidx:ZeroIndex[i]]
         currentVPlan = currentVPlan - 1
         currentVPlanLength = len(currentVPlan)
         tempidx = ZeroIndex[i] + 1
@@ -178,18 +178,23 @@ def cost_function(Solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
             NotTransportCost = np.sum(Cargo[currentVPlan, 3]) / 2
         else:
             if currentVPlanLength > 0:
-                sortRout = np.sort(currentVPlan, kind='quicksort')
+                sortRout = np.sort(currentVPlan)
                 I = np.argsort(currentVPlan, kind='quicksort')
                 Indx = np.argsort(I, kind='quicksort')
 
-                PortIndex = Cargo[sortRout, 1].astype(int)
+                PortIndex = Cargo[sortRout, 1]
+                PortIndex = PortIndex.astype("int64")
                 PortIndex[::2] = Cargo[sortRout[::2], 0]
                 PortIndex = PortIndex[Indx] - 1
 
-                Diag = TravelCost[i, PortIndex[:-1], PortIndex[1:]]
+                Diag = np.zeros(PortIndex.size - 1)
+                for j in range(len(PortIndex) - 1):
+                    Diag[j] = TravelCost[i, PortIndex[j], PortIndex[j+1]]
 
-                FirstVisitCost = FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]
-                RouteTravelCost[i] = np.sum(np.hstack((FirstVisitCost, Diag.flatten())))
+                FirstVisitCost = np.atleast_1d(np.array(FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]))
+                IndividualRouteTravelCost = np.concatenate((FirstVisitCost, Diag))
+                RouteTravelCost[i] = np.sum(IndividualRouteTravelCost)
+                
                 CostInPorts[i] = np.sum(PortCost[i, currentVPlan]) / 2
 
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
