@@ -104,9 +104,6 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
             if not np.all(allcand):
                 return False
             
-
-            
-
             currentTime = 0
             sortRout = np.sort(currentVPlan)
             I = np.argsort(currentVPlan, kind='quicksort')
@@ -130,7 +127,8 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
 
             Timewindows = Timewindows[:, Indx]
 
-            PortIndex = Cargo[sortRout, 1].astype(int)
+
+            PortIndex = Cargo[sortRout, 1].astype("int")
             PortIndex[::2] = Cargo[sortRout[::2], 0]
             PortIndex = PortIndex[Indx] - 1
 
