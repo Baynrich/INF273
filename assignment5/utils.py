@@ -1,4 +1,5 @@
 import numpy as np
+from numba import jit
 
 def load_problem(filename):
     """
@@ -75,7 +76,7 @@ def load_problem(filename):
     PortCost = PortCost[1:, 1:]
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
-
+#@jit(nopython=True)
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
     :rtype: tuple
@@ -85,7 +86,8 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
     """
 
     solution = np.append(solution, [0])
-    ZeroIndex = np.array(np.where(solution == 0)[0], dtype=int)
+    ZeroIndex = np.where(solution == 0)[0]
+    ZeroIndex = ZeroIndex.astype('int64')
     feasibility = True
     tempidx = 0
     for i in range(n_vehicles): 
@@ -94,14 +96,18 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
         NoDoubleCallOnVehicle = len(currentVPlan)
         tempidx = ZeroIndex[i] + 1
         if NoDoubleCallOnVehicle > 0:
+            allcand = np.zeros(currentVPlan.size)
+            for j in range(len(currentVPlan)):
+                currentv = currentVPlan[j]
+                allcand[j] = VesselCargo[i, currentv]
 
-            if not np.all(VesselCargo[i, currentVPlan]):
+            if not np.all(allcand):
                 feasibility = False
                 break
             else:
                 LoadSize = 0
                 currentTime = 0
-                sortRout = np.sort(currentVPlan, kind='quicksort')
+                sortRout = np.sort(currentVPlan)
                 I = np.argsort(currentVPlan, kind='quicksort')
                 Indx = np.argsort(I, kind='quicksort')
                 LoadSize -= Cargo[sortRout, 2]
@@ -180,7 +186,6 @@ def cost_function(Solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
 
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
     return TotalCost
-
 
 def handle_init_costs(sol, n_vehicles, n_calls, Cargo, TravelCost, FirstTravelCost, PortCost):
     costs = np.zeros((n_calls, 3), dtype="float64")
