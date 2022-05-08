@@ -76,7 +76,6 @@ def load_problem(filename):
     PortCost = PortCost[1:, 1:]
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
-@jit(nopython=True)
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
     :rtype: tuple
@@ -107,12 +106,13 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
             I = np.argsort(currentVPlan, kind='quicksort')
             Indx = np.argsort(I, kind='quicksort')
 
-            LoadSize = np.zeros(sortRout.size)
+            LoadSize = np.zeros(len(sortRout))
             for j in range(len(sortRout)):
-                LoadSize[j] = (-1) * Cargo[j, 2]
-
+                LoadSize[j] = (-1) * Cargo[sortRout[j], 2]
             for j in range(int(len(LoadSize) / 2)):
-                LoadSize[j*2] = abs(LoadSize[j*2])
+                LoadSize[j*2] = Cargo[sortRout[j*2], 2]
+            
+
             LoadSize = LoadSize[Indx]
             if np.any(VesselCapacity[i] - np.cumsum(LoadSize) < 0):
                 return False
@@ -152,7 +152,6 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
 
     return feasibility
 
-@jit(nopython=True)
 def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     """
     :param solution: the proposed solution for the order of calls in each vehicle
@@ -204,7 +203,6 @@ def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
     return TotalCost
 
-@jit(nopython=True)
 def handle_init_costs(sol, n_vehicles, n_calls, Cargo, TravelCost, FirstTravelCost, PortCost):
     costs = np.zeros((n_calls, 3), dtype="float64")
     vidx = 0

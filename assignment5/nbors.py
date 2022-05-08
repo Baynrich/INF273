@@ -3,7 +3,6 @@ import numpy as np
 from utils import cost_function, feasibility_check, handle_init_costs
 from numba import jit
 
-@jit(nopython=True)
 def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     # Reassigns call with currently highest associated cost and reassigns it to a new vehicle
     actives = costs[costs[:, 1] == 0]
@@ -37,7 +36,6 @@ def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, Po
     costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     return sol, costs
 
-@jit(nopython=True)
 def reorder_vehicle_calls(sol):
     """ Reinsert a call within the schedule of a vehicle """
     # Do not allow selecting retired calls on this occasion
@@ -68,7 +66,6 @@ def reorder_vehicle_calls(sol):
     sol[to_reorder] = target
     return sol
 
-@jit(nopython=True)
 def assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     retireds = costs[costs[:, 1] == 1]
     if len(retireds) < 1:
@@ -94,7 +91,6 @@ def assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, 
         costs[int(retireds[i, 2] - 1)][1] = 0
     return sol, costs
             
-@jit(nopython=True)
 def retire_calls(sol, costs, Cargo):
     # TODO - make call selection a weighted probability instead of direct selection to avoid getting stuck.
     # Filter calls currently not retired
@@ -114,7 +110,6 @@ def retire_calls(sol, costs, Cargo):
         costs[int(actives[i, 2] - 1)][1] = 1
     return sol, costs
 
-@jit(nopython=True)
 def reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
     all_calls = np.array([i+1 for i in range(n_calls)])
     r_sol = np.array([0 for i in range(n_vehicles)])

@@ -21,9 +21,9 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
     DECAY_VALUE = 0.1
 
     # Constants
-    best_sol = init_sol
+    best_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
     best_sol_cost = cost_function(best_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
-    global_best_sol = init_sol
+    global_best_sol = np.copy(best_sol)
     global_best_cost = best_sol_cost
     delta_es = np.array([1])
     T = 0
@@ -39,11 +39,10 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
 
     feasibles = 0
     posdelts = 0
-
     n_since_last_better = 0
-    init_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
-    for i in tqdm(range(n)):
-        
+    for i in tqdm(range(n)): 
+        if(not feasibility_check(global_best_sol, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)):
+            print("Infeasible global best:", global_best_sol)
         if i == 100:
             T, alpha = handle_set_T_alpha(delta_es, n)
 
@@ -73,17 +72,17 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
 
             feasibles += 1
             if delta_e < 0:
-                costs = nbor_costs
                 posdelts += 1
                 n_since_last_better = 0
-                best_sol = nbor
+                best_sol = np.copy(nbor)
+                costs = np.copy(nbor_costs)
                 best_sol_cost = nbor_cost
                 operator_scores[operator] += (NEW_IMPROVEMENT_SCORE / operator_decay[operator, 1])
                 operator_decay[operator, 1] += 0.01
 
                 if best_sol_cost < global_best_cost:
                     global_best_cost = best_sol_cost
-                    global_best_sol = best_sol
+                    global_best_sol = np.copy(best_sol)
                     operator_scores[operator] += (NEW_BEST_SCORE /  operator_decay[operator, 2])
                     operator_decay[operator, 2] += 0.01
 

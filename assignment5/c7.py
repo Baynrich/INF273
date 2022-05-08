@@ -18,7 +18,7 @@ def run_problem(probname):
     best_best_cost = float('inf')
     best_costs = []
     st = time.time()
-    for i in range(10):
+    for i in range(3):
         best_sol, best_sol_cost = alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
         best_costs.append(best_sol_cost)
         if(best_sol_cost < best_best_cost):
