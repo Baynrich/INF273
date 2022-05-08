@@ -4,11 +4,12 @@ from tqdm import tqdm
 import random
 import numpy as np
 import time
+from numba import jit
 
 
-
+@jit(nopython=True)
 def handle_set_T_alpha(delta_es, n):
-    T = (sum(delta_es) / len(delta_es)) / np.log(0.8)
+    T = (np.sum(delta_es) / len(delta_es)) / np.log(0.8)
     alpha = np.power(0.1 / T, 1 / n)
     return T, alpha
 

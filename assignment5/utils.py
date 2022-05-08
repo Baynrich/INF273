@@ -76,6 +76,7 @@ def load_problem(filename):
     PortCost = PortCost[1:, 1:]
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
+@jit(nopython=True)
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
     :rtype: tuple
@@ -152,6 +153,8 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
 
     return feasibility
 
+
+@jit(nopython=True)
 def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     """
     :param solution: the proposed solution for the order of calls in each vehicle
@@ -203,6 +206,7 @@ def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, Port
     TotalCost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
     return TotalCost
 
+@jit(nopython=True)
 def handle_init_costs(sol, n_vehicles, n_calls, Cargo, TravelCost, FirstTravelCost, PortCost):
     costs = np.zeros((n_calls, 3), dtype="float64")
     vidx = 0
