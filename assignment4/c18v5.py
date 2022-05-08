@@ -9,7 +9,7 @@ def run_problem(problem, initial_solution):
     return best_sol, best_sol_cost
 
 problem = load_problem('./Call_18_Vehicle_5.txt')
-init_sol = [0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18]
+"""init_sol = [0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18]
 
 init_cost = cost_function(init_sol, problem)
 sols_iter = []
@@ -30,4 +30,6 @@ print("Time:", end_time - start_time)
 
 print(sols_iter[costs_iter.index(min(costs_iter))])
 print(feasibility_check(sols_iter[costs_iter.index(min(costs_iter))], problem))
-
+"""
+foundsol = [17, 17, 13, 13,  0,  5, 12, 11, 12,  7,  5, 11,  7,  0, 16, 18, 16,  6, 18,  6,  0, 10, 14, 14, 10,  0,  1,  1,  3,  3,  0,  4,  4, 15, 15,  2,  2,  9,  9,  8,  8]
+print(feasibility_check(foundsol, problem))

@@ -3,7 +3,7 @@ import numpy as np
 from utils import cost_function, feasibility_check, handle_init_costs
 from numba import jit
 
-
+@jit(nopython=True)
 def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
     # Reassigns call with currently highest associated cost and reassigns it to a new vehicle
     actives = costs[costs[:, 1] == 0]
@@ -12,16 +12,27 @@ def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, Po
         return sol, costs
     actives = actives[np.argsort(actives[:, 0])][::-1]
     sol = sol[sol != actives[0, 2]]
+    
+    # Randomly select vehicle to assign removed call to.
     target_v = random.randint(0, n_vehicles - 1)
-
     ZeroIndexes = np.where(sol == 0)[0]
     ZeroIndexes = ZeroIndexes.astype('int64')
     sidx = 0 if target_v == 0 else ZeroIndexes[target_v - 1] + 1
     eidx = ZeroIndexes[target_v]
-    for i in range(2):
-        insertpos = random.randint(sidx, eidx + i)
-        sol = np.insert(sol, insertpos, int(actives[0, 2]))
-        # Update inserted call's associated cost
+
+    # Reinsert removed call into selected vehicle
+    insertIdx = random.randint(sidx, eidx)
+    befores = sol[:insertIdx]
+    afters = sol[insertIdx:]
+    sol = np.concatenate((befores, np.array([int(actives[0, 2])])))
+    sol = np.concatenate((sol, afters))
+    insertIdx = random.randint(sidx, eidx)
+    befores = sol[:insertIdx]
+    afters = sol[insertIdx:]
+    sol = np.concatenate((befores, np.array([int(actives[0, 2])])))
+    sol = np.concatenate((sol, afters))
+
+    # Update inserted call's associated cost
     updatedCostSol = sol[np.logical_or(sol != 0, sol != actives[0, 2])]
     costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     return sol, costs

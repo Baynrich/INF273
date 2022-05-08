@@ -9,6 +9,7 @@ def run_problem(problem, initial_solution):
     return best_sol, best_sol_cost
 
 problem = load_problem('./Call_7_Vehicle_3.txt')
+
 init_sol = [0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]
 
 init_cost = cost_function(init_sol, problem)
@@ -30,4 +31,3 @@ print("Time:", end_time - start_time)
 
 print(sols_iter[costs_iter.index(min(costs_iter))])
 print(feasibility_check(sols_iter[costs_iter.index(min(costs_iter))], problem))
-
