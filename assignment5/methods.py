@@ -1,6 +1,5 @@
 from nbors import assign_retireds, reassign_call, reorder_vehicle_calls, retire_calls, reassign_all
 from utils import cost_function, feasibility_check, get_feasibility_cost 
-from tqdm import tqdm
 import random
 import numpy as np
 import time

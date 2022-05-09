@@ -4,6 +4,12 @@ from nbors import *
 from methods import *
 from utils import cost_function
 import time
+import subprocess
+import sys
+
+subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy"])
+subprocess.check_call([sys.executable, "-m", "pip", "install", "numba"])
+
 
 # Associated times adds up to 895 seconds
 # TODO - Change for run session
