@@ -58,7 +58,7 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
             n_since_last_better = 0
 
         st = time.time()
-        operator, nbor, nbor_costs = select_nbor_op(best_sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
+        operator, nbor, nbor_costs = select_nbor_op(best_sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
         et = time.time()
         opcounts[operator] += 1
         optimes[operator] += (et-st)
@@ -116,14 +116,14 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
     return global_best_sol, global_best_cost
 
 
-def select_nbor_op(sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
+def select_nbor_op(sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
         nbor, costs = reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
-        nbor = reorder_vehicle_calls(sol)
+        nbor = reorder_vehicle_calls(sol,  n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
     elif choice >= operator_probabilities[1] and choice < (operator_probabilities[0] + operator_probabilities[1] + operator_probabilities[2] ):
         operator = 2
         nbor, costs = assign_retireds(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
