@@ -114,9 +114,9 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
             operator_scores = np.array([1] * N_OPERATORS)
         i += 1
 
-    print("n_since_last_better", n_since_last_better)
+
     print("opcounts", opcounts)
-    
+
     return global_best_sol, global_best_cost
 
 @jit(nopython=True)
@@ -124,7 +124,7 @@ def select_nbor_op(sol, operator_probabilities, costs, n_vehicles, Cargo, Travel
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
         operator = 0
-        nbor, costs = reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
+        nbor, costs = reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
     elif choice >= operator_probabilities[0]  and choice < ( operator_probabilities[0] + operator_probabilities[1]):
         operator = 1
         nbor = reorder_vehicle_calls(sol,  n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)

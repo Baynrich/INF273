@@ -18,14 +18,14 @@ for i in range(n_calls):
     init_sol += [(i+1), (i+1)]
 init_sol = np.array(init_sol)
 sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
-reassign_call(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
+reassign_call(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
 reorder_vehicle_calls(init_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
 assign_retireds(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
 retire_calls(init_sol, costs, Cargo)
 handle_set_T_alpha(np.array([1]), 1)
 select_nbor_op(sol, np.ones(4), costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
 print("Function initialisation finished after", time.time() - start_init_time, "seconds")
-x = input("Are you ready?")
+#x = input("Are you ready?")
 
 
 def run_problem(probname, probtime):
