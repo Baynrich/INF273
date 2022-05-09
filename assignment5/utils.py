@@ -1,5 +1,5 @@
 import numpy as np
-from numba import jit
+from numba import jit, prange
 
 def load_problem(filename):
     """
@@ -77,6 +77,105 @@ def load_problem(filename):
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
 
+@jit(nopython=True, parallel=True)
+def get_feasibility_cost(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
+    NotTransportCost = 0
+    RouteTravelCost = np.zeros(n_vehicles)
+    CostInPorts = np.zeros(n_vehicles)
+    
+    solution = np.append(solution, [0])
+    ZeroIndex = np.where(solution == 0)[0]
+    ZeroIndex = ZeroIndex.astype('int64')
+    feasibility = True
+    tempidx = 0
+
+    for i in prange(n_vehicles + 1): 
+        currentVPlan = solution[tempidx:ZeroIndex[i]]
+        currentVPlan = currentVPlan - 1
+        currentVPlanLength = len(currentVPlan)
+        tempidx = ZeroIndex[i] + 1
+
+        if i == n_vehicles:
+            # Calculate cost of not transporting
+            NotTransportCost = np.sum(Cargo[currentVPlan, 3]) / 2
+        else:
+            if currentVPlanLength > 0:
+                # Test for incompatible vessel and cargo
+                allcand = np.zeros(currentVPlan.size)
+                for j in range(len(currentVPlan)):
+                    currentv = currentVPlan[j]
+                    allcand[j] = VesselCargo[i, currentv]
+                if not np.all(allcand):
+                    return False, 0
+
+                sortRout = np.sort(currentVPlan)
+                I = np.argsort(currentVPlan, kind='quicksort')
+                Indx = np.argsort(I, kind='quicksort')
+
+                # Test for load size too high
+                LoadSize = np.zeros(len(sortRout))
+                for j in range(len(sortRout)):
+                    LoadSize[j] = (-1) * Cargo[sortRout[j], 2]
+                for j in range(int(len(LoadSize) / 2)):
+                    LoadSize[j*2] = Cargo[sortRout[j*2], 2]
+                LoadSize = LoadSize[Indx]
+                if np.any(VesselCapacity[i] - np.cumsum(LoadSize) < 0):
+                    return False, 0
+
+                # Test for time windows out of bounds
+                Timewindows = np.zeros((2, currentVPlanLength))
+                Timewindows[0] = Cargo[sortRout, 6]
+                Timewindows[0, ::2] = Cargo[sortRout[::2], 4]
+                Timewindows[1] = Cargo[sortRout, 7]
+                Timewindows[1, ::2] = Cargo[sortRout[::2], 5]
+                Timewindows = Timewindows[:, Indx]
+                PortIndex = Cargo[sortRout, 1].astype("int")
+                PortIndex[::2] = Cargo[sortRout[::2], 0]
+                PortIndex = PortIndex[Indx] - 1
+                LU_Time = np.zeros(sortRout.size)
+                for j in range(len(LU_Time)):
+                    if np.mod(j, 2) == 0:
+                        LU_Time[j] = LoadingTime[i, sortRout[j]]
+                    else:
+                        LU_Time[j] = UnloadingTime[i, sortRout[j]]
+                LU_Time = LU_Time[Indx]
+                Diag = np.zeros(PortIndex.size - 1)
+                for j in range(len(PortIndex) - 1):
+                    Diag[j] = TravelTime[i, PortIndex[j], PortIndex[j+1]]
+                FirstVisitTime = np.atleast_1d(np.array(FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]))
+                RouteTravelTime = np.concatenate((FirstVisitTime, Diag))
+                ArriveTime = np.zeros(currentVPlanLength)
+                currentTime = 0
+                for j in range(currentVPlanLength):
+                    ArriveTime[j] = max(currentTime + RouteTravelTime[j], Timewindows[0, j])
+                    if ArriveTime[j] > Timewindows[1, j]:
+                        return False, 0
+                    currentTime = ArriveTime[j] + LU_Time[j]
+
+                # Calculate route cost of current vehicle
+                PortIndex = Cargo[sortRout, 1]
+                PortIndex = PortIndex.astype("int64")
+                PortIndex[::2] = Cargo[sortRout[::2], 0]
+                PortIndex = PortIndex[Indx] - 1
+                Diag = np.zeros(PortIndex.size - 1)
+                for j in range(len(PortIndex) - 1):
+                    Diag[j] = TravelCost[i, PortIndex[j], PortIndex[j+1]]
+                FirstVisitCost = np.atleast_1d(np.array(FirstTravelCost[i, int(Cargo[currentVPlan[0], 0] - 1)]))
+                IndividualRouteTravelCost = np.concatenate((FirstVisitCost, Diag))
+                RouteTravelCost[i] = np.sum(IndividualRouteTravelCost)
+
+                # Calculate port costs
+                insert_elem = np.zeros(currentVPlan.size)
+                for j in range(len(currentVPlan)):
+                    insert_elem[j] = PortCost[i, currentVPlan[j]]
+                CostInPorts[i] = np.sum(insert_elem) / 2
+        
+    cost = NotTransportCost + sum(RouteTravelCost) + sum(CostInPorts)
+    return feasibility, cost
+                
+
+
+
 @jit(nopython=True)
 def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """
@@ -93,9 +192,10 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
     for i in range(n_vehicles): 
         currentVPlan = solution[tempidx:ZeroIndex[i]]
         currentVPlan = currentVPlan - 1
-        NoDoubleCallOnVehicle = len(currentVPlan)
+        currentVPlanLength = len(currentVPlan)
         tempidx = ZeroIndex[i] + 1
-        if NoDoubleCallOnVehicle > 0:
+
+        if currentVPlanLength > 0:
             allcand = np.zeros(currentVPlan.size)
             for j in range(len(currentVPlan)):
                 currentv = currentVPlan[j]
@@ -108,18 +208,20 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
             I = np.argsort(currentVPlan, kind='quicksort')
             Indx = np.argsort(I, kind='quicksort')
 
+
+
+
             LoadSize = np.zeros(len(sortRout))
             for j in range(len(sortRout)):
                 LoadSize[j] = (-1) * Cargo[sortRout[j], 2]
             for j in range(int(len(LoadSize) / 2)):
                 LoadSize[j*2] = Cargo[sortRout[j*2], 2]
             
-
             LoadSize = LoadSize[Indx]
             if np.any(VesselCapacity[i] - np.cumsum(LoadSize) < 0):
                 return False
 
-            Timewindows = np.zeros((2, NoDoubleCallOnVehicle))
+            Timewindows = np.zeros((2, currentVPlanLength))
             Timewindows[0] = Cargo[sortRout, 6]
             Timewindows[0, ::2] = Cargo[sortRout[::2], 4]
             Timewindows[1] = Cargo[sortRout, 7]
@@ -143,17 +245,16 @@ def feasibility_check(solution, n_vehicles, Cargo, TravelTime, FirstTravelTime, 
                 Diag[j] = TravelTime[i, PortIndex[j], PortIndex[j+1]]
             FirstVisitTime = np.atleast_1d(np.array(FirstTravelTime[i, int(Cargo[currentVPlan[0], 0] - 1)]))
             RouteTravelTime = np.concatenate((FirstVisitTime, Diag))
-            ArriveTime = np.zeros(NoDoubleCallOnVehicle)
+            ArriveTime = np.zeros(currentVPlanLength)
 
             currentTime = 0
-            for j in range(NoDoubleCallOnVehicle):
+            for j in range(currentVPlanLength):
                 ArriveTime[j] = max(currentTime + RouteTravelTime[j], Timewindows[0, j])
                 if ArriveTime[j] > Timewindows[1, j]:
                     return False
                 currentTime = ArriveTime[j] + LU_Time[j]
 
     return feasibility
-
 
 @jit(nopython=True)
 def cost_function(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost):
