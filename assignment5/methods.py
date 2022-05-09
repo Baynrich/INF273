@@ -13,7 +13,7 @@ def handle_set_T_alpha(delta_es, n):
     alpha = np.power(0.1 / T, 1 / n)
     return T, alpha
 
-def alns(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
+def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
     n = 10000
     N_OPERATORS = 4
     NEW_SOL_SCORE = 2
@@ -36,10 +36,21 @@ def alns(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity
     operator_decay = np.ones((N_OPERATORS, 3))
     opcounts = np.zeros(N_OPERATORS + 1)
 
-    feasibles = 0
-    posdelts = 0
     n_since_last_better = 0
-    for i in tqdm(range(n)):
+    init_time = time.time()
+    i = 0
+    while(True):
+        if i % 100 == 0:
+            now_time = time.time()
+
+        if i >= 20000:
+            print("Exiting at iteration", i, "with time", now_time - init_time)
+            break
+        if now_time - init_time >= probtime and i >= 10000:
+            print("Exiting at iteration", i, "with time", now_time - init_time)
+            break
+
+
         # Handle explore/exploit values
         if i == 100:
             T, alpha = handle_set_T_alpha(delta_es, n)
@@ -60,9 +71,7 @@ def alns(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity
                 operator_decay[operator, 0] += DECAY_VALUE
                 visited = np.append(visited, nbor_cost)
 
-            feasibles += 1
             if delta_e < 0:
-                posdelts += 1
                 n_since_last_better = 0
                 best_sol = np.copy(nbor)
                 costs = np.copy(nbor_costs)
@@ -100,9 +109,10 @@ def alns(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity
             operator_decay = np.ones((N_OPERATORS, 3))
         
         # Every so often, completely reset scores to avoid getting stuck with a single operator
-        if i % 3000 == 0:
+        if i > 0 and i % 2500 == 0:
             operator_probabilities = np.array([1 / N_OPERATORS] * N_OPERATORS)
             operator_scores = np.array([1] * N_OPERATORS)
+        i += 1
 
     print("n_since_last_better", n_since_last_better)
     print("opcounts", opcounts)
