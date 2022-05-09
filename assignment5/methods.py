@@ -19,7 +19,7 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
     NEW_SOL_SCORE = 2
     NEW_IMPROVEMENT_SCORE = 1
     NEW_BEST_SCORE = 6
-    DECAY_VALUE = 0.1
+    DECAY_VALUE = 0.3
 
     # Constants
     best_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
@@ -66,10 +66,10 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
         delta_e = nbor_cost - best_sol_cost
 
         if feasibility_check(nbor, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
-            if not nbor in visited:
+            if not nbor_cost in visited:
                 operator_scores[operator] += (NEW_SOL_SCORE / operator_decay[operator, 0])
                 operator_decay[operator, 0] += DECAY_VALUE
-                visited = np.append(visited, nbor)
+                visited = np.append(visited, nbor_cost)
 
             feasibles += 1
             if delta_e < 0:
@@ -109,13 +109,19 @@ def alns(init_sol, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
                 operator_probabilities[j] = operator_scores[j] / opsum
             operator_scores = np.array([1] * N_OPERATORS)
             operator_decay = np.ones((N_OPERATORS, 3))
+        
+        # Every so often, completely reset scores to avoid getting stuck with a single operator
+        if i % 3000 == 0:
+            operator_probabilities = np.array([1 / N_OPERATORS] * N_OPERATORS)
+            operator_scores = np.array([1] * N_OPERATORS)
+
     print("n_since_last_better", n_since_last_better)
     print("opcounts", opcounts)
     print("optimes", optimes)
 
     return global_best_sol, global_best_cost
 
-
+@jit(nopython=True)
 def select_nbor_op(sol, operator_probabilities, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     choice = random.random()
     if choice < operator_probabilities[0] / sum(operator_probabilities):
