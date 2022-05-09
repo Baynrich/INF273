@@ -116,7 +116,7 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
 
     print("n_since_last_better", n_since_last_better)
     print("opcounts", opcounts)
-
+    
     return global_best_sol, global_best_cost
 
 @jit(nopython=True)

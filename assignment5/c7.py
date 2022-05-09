@@ -5,8 +5,10 @@ from methods import *
 from utils import cost_function
 import time
 
+# Associated times adds up to 895 seconds
 # TODO - Change for run session
-probnames = [('./Call_7_Vehicle_3.txt', 30), ('./Call_18_Vehicle_5.txt', 10), ('./Call_35_Vehicle_7.txt', 20), ('./Call_80_Vehicle_20.txt', 120), ('./Call_130_Vehicle_40.txt', 300)]
+probnames = [('./Call_7_Vehicle_3.txt', 45), ('./Call_18_Vehicle_5.txt', 75), ('./Call_35_Vehicle_7.txt', 100), ('./Call_80_Vehicle_20.txt', 225), ('./Call_130_Vehicle_40.txt', 450)]
+
 
 # Compiles JIT functions ahead of time as to not waste running time doing it.
 start_init_time = time.time()
@@ -20,11 +22,14 @@ reassign_call(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, P
 reorder_vehicle_calls(init_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
 assign_retireds(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
 retire_calls(init_sol, costs, Cargo)
+handle_set_T_alpha(np.array([1]), 1)
+select_nbor_op(sol, np.ones(4), costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
 print("Function initialisation finished after", time.time() - start_init_time, "seconds")
 x = input("Are you ready?")
 
 
 def run_problem(probname, probtime):
+    print("Running problem:", probname, " with allocated time:", probtime)
     n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost = load_problem(probname)
     init_sol = [0] * n_vehicles
     for i in range(n_calls):
@@ -39,8 +44,11 @@ def run_problem(probname, probtime):
     return sol, cost, runtime, init_cost
 
 f = open("results.txt", "a")
+bonustime = 0
 for probname, probtime in probnames:
-    sol, cost, rt, icost = run_problem(probname, probtime)
+    sol, cost, rt, icost = run_problem(probname, (probtime + bonustime))
+    # Accumulate time not used in previous iterations
+    bonustime = (probtime + bonustime) - rt
     f = open("results.txt", "a")
     f.write(probname + "\n")
     f.write("Cost: " + str(cost) + "\n")
