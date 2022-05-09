@@ -4,15 +4,16 @@ import random
 import numpy as np
 import time
 from numba import jit
+import matplotlib.pyplot as plt
 
 
 @jit(nopython=True)
 def handle_set_T_alpha(delta_es, n):
     T = (np.sum(delta_es) / len(delta_es)) / np.log(0.8)
-    alpha = np.power(0.1 / T, 1 / n)
+    alpha = 0.999
     return T, alpha
 
-def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
+def alns(probtime, cooldown, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost):
     n = 10000
     N_OPERATORS = 4
     NEW_SOL_SCORE = 2
@@ -25,9 +26,6 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
     best_sol_cost = cost_function(best_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     global_best_sol = np.copy(best_sol)
     global_best_cost = best_sol_cost
-    delta_es = np.array([1])
-    T = 0
-    alpha = 0
 
     visited = np.array([])
     operator_probabilities = np.array([1 / N_OPERATORS] * N_OPERATORS)
@@ -50,10 +48,6 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
             break
 
 
-        # Handle explore/exploit values
-        if i == 100:
-            T, alpha = handle_set_T_alpha(delta_es, n)
-
         # If we get stuck on the same solution, jump into some new solution and try from there.
         if n_since_last_better >= 25:
             best_sol, costs = reassign_all(n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost)
@@ -70,7 +64,7 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
                 operator_decay[operator, 0] += DECAY_VALUE
                 visited = np.append(visited, nbor_cost)
 
-            if delta_e < 0:
+            if delta_e <= 0:
                 n_since_last_better = 0
                 best_sol = np.copy(nbor)
                 costs = np.copy(nbor_costs)
@@ -86,18 +80,11 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
 
             else:
                 n_since_last_better += 1
-                if(i < 100):
-                    delta_es = np.append(delta_es, delta_e)
                 randval = random.random()
-
-                threshold = 0.8 if i < 100 else np.exp(-delta_e / T)
-
-                if randval < threshold:
+                if randval < cooldown[i]:
                     costs = nbor_costs
                     best_sol_cost = nbor_cost
                     best_sol = nbor
-        if i >= 100:
-            T = T * alpha
        
         # Update operator probabilities based on achieved scores.
         if i % 200 == 0:
@@ -113,8 +100,8 @@ def alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, Vess
             operator_scores = np.array([1] * N_OPERATORS)
         i += 1
 
-
     print("opcounts", opcounts)
+
 
     return global_best_sol, global_best_cost
 

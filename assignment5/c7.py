@@ -30,11 +30,16 @@ assign_retireds(init_sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost,
 retire_calls(init_sol, costs, Cargo)
 handle_set_T_alpha(np.array([1]), 1)
 select_nbor_op(sol, np.ones(4), costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
+
+cooldown = np.zeros(20000)
+for i in range(len(cooldown)):
+    cooldown[i] = np.exp(-1 * ((i+100) / 2000))
+
 print("Function initialisation finished after", time.time() - start_init_time, "seconds")
 #x = input("Are you ready?")
 
 
-def run_problem(probname, probtime):
+def run_problem(probname, probtime, cooldown):
     print("Running problem:", probname, " with allocated time:", probtime)
     n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost = load_problem(probname)
     init_sol = [0] * n_vehicles
@@ -44,7 +49,7 @@ def run_problem(probname, probtime):
     init_cost = cost_function(init_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
 
     st = time.time()
-    sol, cost = alns(probtime, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
+    sol, cost = alns(probtime, cooldown, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
     runtime = time.time() - st
 
     return sol, cost, runtime, init_cost
@@ -52,7 +57,7 @@ def run_problem(probname, probtime):
 f = open("results.txt", "a")
 bonustime = 0
 for probname, probtime in probnames:
-    sol, cost, rt, icost = run_problem(probname, (probtime + bonustime))
+    sol, cost, rt, icost = run_problem(probname, (probtime + bonustime), cooldown)
     # Accumulate time not used in previous iterations
     bonustime = (probtime + bonustime) - rt
     f = open("results.txt", "a")
