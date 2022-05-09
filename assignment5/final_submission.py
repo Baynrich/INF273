@@ -6,6 +6,7 @@ from utils import cost_function
 import time
 import subprocess
 import sys
+from tqdm import tqdm
 
 subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "numba"])
@@ -14,7 +15,6 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "numba"])
 # Associated times adds up to 895 seconds
 # TODO - Change for run session
 probnames = [('./Call_7_Vehicle_3.txt', 45), ('./Call_18_Vehicle_5.txt', 75), ('./Call_35_Vehicle_7.txt', 100), ('./Call_80_Vehicle_20.txt', 225), ('./Call_130_Vehicle_40.txt', 450)]
-
 
 # Compiles JIT functions ahead of time as to not waste running time doing it.
 start_init_time = time.time()
@@ -36,37 +36,41 @@ for i in range(len(cooldown)):
     cooldown[i] = np.exp(-1 * ((i+100) / 2000))
 
 print("Function initialisation finished after", time.time() - start_init_time, "seconds")
-#x = input("Are you ready?")
 
-
-def run_problem(probname, probtime, cooldown):
-    print("Running problem:", probname, " with allocated time:", probtime)
+def run_problem_average(probname, cooldown):
+    print("Running problem:", probname)
     n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost = load_problem(probname)
     init_sol = [0] * n_vehicles
     for i in range(n_calls):
         init_sol += [(i+1), (i+1)]
     init_sol = np.array(init_sol)
     init_cost = cost_function(init_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
+    best_cost = float('inf')
+    best_sol = None
 
+    costs = np.array([])
     st = time.time()
-    sol, cost = alns(probtime, cooldown, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
+    for i in tqdm(range(10)):
+        sol, cost = alns(999999999999, cooldown, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost) 
+        costs = np.append(costs, cost)
+        if cost < best_cost:
+            best_cost = cost
+            best_sol = sol
     runtime = time.time() - st
-    return sol, cost, runtime, init_cost
+    return best_sol, best_cost, runtime, np.mean(costs), init_cost
 
 
-def run_all_once(cooldown):
-    f = open("results.txt", "a")
-    bonustime = 0
+def run_all_average():
     for probname, probtime in probnames:
-        sol, cost, rt, icost = run_problem(probname, (probtime + bonustime), cooldown)
+        sol, cost, rt, acost, icost = run_problem_average(probname, cooldown)
         # Accumulate time not used in previous iterations
-        bonustime = (probtime + bonustime) - rt
         f = open("results.txt", "a")
         f.write(probname + "\n")
-        f.write("Cost: " + str(cost) + "\n")
+        f.write("Best cost: " + str(cost) + "\n")
+        f.write("Average cost" + str(acost) + "\n")
         f.write("Improvement% (from all retireds): " + str((icost-cost)/icost) + "\n")
         f.write("Runtime: " + str(rt) + "\n")
         f.write("Solution: " + str(sol) + "\n\n\n")
         f.close()
 
-run_all_once(cooldown)
+run_all_average()
