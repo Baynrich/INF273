@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from utils import cost_function, feasibility_check, handle_init_costs
+from utils import cost_function, feasibility_check, get_feasibility_cost, handle_init_costs
 from numba import jit, prange
 
 @jit(nopython=True)
@@ -37,7 +37,7 @@ def reassign_call(sol, costs, n_vehicles, Cargo, TravelCost, FirstTravelCost, Po
     costs[int(actives[0, 2] - 1)][0] = cost_function(updatedCostSol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     return sol, costs
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def reorder_vehicle_calls(sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     """ Greedily reinsert a call within the schedule of a vehicle """
     # Do not allow selecting retired calls on this occasion
@@ -67,18 +67,17 @@ def reorder_vehicle_calls(sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, P
     top_sol_cost = cost_function(top_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
     
 
-    for i in prange(sidx, eidx):
+    for i in range(sidx, eidx):
         r_sol = sol.copy()
         target = r_sol[i]
         r_sol[i] = r_sol[to_reorder]
         r_sol[to_reorder] = target
 
-        if(feasibility_check(r_sol, n_vehicles, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)):
-            r_sol_cost = cost_function(r_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost)
-            if r_sol_cost < top_sol_cost:
-                # TODO - Data race may occur here
-                top_sol_cost = r_sol_cost
-                top_sol = r_sol
+        feas, r_sol_cost = get_feasibility_cost(r_sol, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo)
+        if feas and r_sol_cost < top_sol_cost:
+            # TODO - Data race may occur here
+            top_sol_cost = r_sol_cost
+            top_sol = r_sol
     return top_sol
 
 @jit(nopython=True)

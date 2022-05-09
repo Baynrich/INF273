@@ -1,5 +1,5 @@
 import numpy as np
-from numba import jit, prange
+from numba import jit
 
 def load_problem(filename):
     """
@@ -77,7 +77,7 @@ def load_problem(filename):
     return n_nodes, n_vehicles, n_calls, Cargo, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo, TravelCost, FirstTravelCost, PortCost
 
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def get_feasibility_cost(solution, n_vehicles, Cargo, TravelCost, FirstTravelCost, PortCost, TravelTime, FirstTravelTime, VesselCapacity, LoadingTime, UnloadingTime, VesselCargo):
     NotTransportCost = 0
     RouteTravelCost = np.zeros(n_vehicles)
@@ -89,7 +89,7 @@ def get_feasibility_cost(solution, n_vehicles, Cargo, TravelCost, FirstTravelCos
     feasibility = True
     tempidx = 0
 
-    for i in prange(n_vehicles + 1): 
+    for i in range(n_vehicles + 1): 
         currentVPlan = solution[tempidx:ZeroIndex[i]]
         currentVPlan = currentVPlan - 1
         currentVPlanLength = len(currentVPlan)
